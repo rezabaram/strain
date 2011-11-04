@@ -11,6 +11,7 @@ class CStrain{
 	~CStrain();
 	double sumM();
 	double WeightedSumM(double *chi);
+	int count_neigh();
 	void die();
 	CStrain *father(){return neighbours.at(0);}
 	void add_neighbour(CStrain *ps){return neighbours.push_back(ps);};
@@ -36,6 +37,15 @@ void CStrain::get_infected(double *sumN, int distance, CStrain *exclude){
 }
 
 
+int CStrain::count_neigh(){
+	int count=0;
+	for (int i=0; i<neighbours.size();i++){
+		if(! neighbours.at(i)->dead) count++;
+	}
+	return count;
+}
+
+
 
 CStrain::~CStrain(){
 	delete[] M;
@@ -57,7 +67,7 @@ CStrain::CStrain(int i, CStrain *f){
 	dead=false;
 }
 double CStrain::sumM(){
-	double sum=0;
+	double sum=0.0;
 	for(int i=0; i<=rmax; i++){
 		sum+=M[i];
 	}
@@ -65,7 +75,7 @@ double CStrain::sumM(){
 }
 
 double CStrain::WeightedSumM(double *chi){
-	double sum=0;
+	double sum=0.0;
 	for(int i=0; i<=rmax; i++){
 		sum+=M[i]*chi[i];
 	}
@@ -73,7 +83,7 @@ double CStrain::WeightedSumM(double *chi){
 }
 
 void CStrain::die(){
-	N=0;
+	N=0.0;
 	dead=true;
 	delete[] M;
 }
