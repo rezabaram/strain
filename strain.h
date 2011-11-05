@@ -3,30 +3,73 @@
 #include <vector>
 #include"parameters.h"
 
-using namespace std;
 
 class CStrain{
 	public:
-	CStrain(int i=-1, CStrain *f=NULL);
+	CStrain(int i, CStrain *f);
 	~CStrain();
 	double sumM();
 	double WeightedSumM(double *chi);
 	int count_neigh();
 	void die();
-	CStrain *father(){return neighbours.at(0);}
-	void add_neighbour(CStrain *ps){return neighbours.push_back(ps);};
+	CStrain *father();
+	void add_neighbour(CStrain *ps){neighbours.push_back(ps);};
 	void get_infected(double *sumN, int distance=0, CStrain *exclude=NULL);
 
 	double fitness;
 	double N;
 	int ID;
 	bool dead;
+	bool is_root;
 	double *M;
-	vector<CStrain*> neighbours;
+	static int max_dist;
+	std::vector<CStrain*> neighbours;
 };
+//this is just used in function get_infected()
+//to find out what was the maximum distance
+//ever reached between the alive nodes
+int CStrain::max_dist=0;
 
+//Constructor take an int for ID and the point of the
+//father node
+CStrain::CStrain(int i, CStrain *f){
+	ID=i; 
+	N=0.0; 
+	fitness=0.0;
+	if(f!=NULL){
+		neighbours.push_back(f);
+		f->add_neighbour(this);
+	}
+	else{
+		is_root=true;
+	}
+
+	M=new double[rmax+1];
+	for(int i=0;i<=rmax;i++){
+		M[i]=0.0;
+	}
+	dead=false;
+}
+
+//Cleans the allocated memory if not yet cleaned 
+CStrain::~CStrain(){
+	if( M!=NULL) delete[] M;
+}
+
+//Returns the pointer to the father if not root node
+CStrain* CStrain::father(){
+	if(is_root) return NULL;
+	return neighbours.at(0);
+}
+
+//Returns the sum of N of all strains at distances up to rmax
+//sumN[0] is the N of the strain itself
+//sumN[1] is the sum of N's of all strains at distance 1
+//....
+//sumN[rmax] is the sum of N's of all strains at distance rmax
 void CStrain::get_infected(double *sumN, int distance, CStrain *exclude){
 	sumN[distance]+=N;
+	if(distance>max_dist)max_dist=distance;
 	if(distance==rmax) return;
 
 	for(int i=0; i<neighbours.size(); i++){
@@ -37,6 +80,7 @@ void CStrain::get_infected(double *sumN, int distance, CStrain *exclude){
 }
 
 
+//Returns the number of alive neighbours of the strain
 int CStrain::count_neigh(){
 	int count=0;
 	for (int i=0; i<neighbours.size();i++){
@@ -46,26 +90,6 @@ int CStrain::count_neigh(){
 }
 
 
-
-CStrain::~CStrain(){
-	delete[] M;
-}
-
-CStrain::CStrain(int i, CStrain *f){
-	M=new double[rmax+1];
-	ID=i; 
-	N=0.0; 
-	if(f!=NULL){
-		neighbours.push_back(f);
-		f->add_neighbour(this);
-	}
-
-	fitness=0.0;
-	for(int i=0;i<=rmax;i++){
-		M[i]=0.0;
-	}
-	dead=false;
-}
 double CStrain::sumM(){
 	double sum=0.0;
 	for(int i=0; i<=rmax; i++){
@@ -74,6 +98,10 @@ double CStrain::sumM(){
 	return sum;
 }
 
+
+//calculates the weighted sum of M, the weight is passed 
+//to the function through the pointer of an array (chi) 
+//with same lenght as M
 double CStrain::WeightedSumM(double *chi){
 	double sum=0.0;
 	for(int i=0; i<=rmax; i++){
@@ -82,10 +110,13 @@ double CStrain::WeightedSumM(double *chi){
 	return sum;
 }
 
+// To same some memory we clean M of 
+// dead strains
 void CStrain::die(){
 	N=0.0;
 	dead=true;
 	delete[] M;
+	M=NULL;
 }
 
 
