@@ -12,19 +12,24 @@ class CStrain{
 	double WeightedSumM(double *chi);
 	int count_neigh();
 	void die();
+	void trim(CStrain *exclude=NULL);
 	CStrain *father();
-	void add_neighbour(CStrain *ps){neighbours.push_back(ps);};
+	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
 	void get_infected(double *sumN, int distance=0, CStrain *exclude=NULL);
 
 	double fitness;
 	double N;
 	int ID;
 	bool dead;
+	bool is_leaf;
 	bool is_root;
 	double *M;
 	static int max_dist;
 	std::vector<CStrain*> neighbours;
+	static unsigned int stotal;
 };
+unsigned int CStrain::stotal=0;
+
 //this is just used in function get_infected()
 //to find out what was the maximum distance
 //ever reached between the alive nodes
@@ -33,6 +38,7 @@ int CStrain::max_dist=0;
 //Constructor take an int for ID and the point of the
 //father node
 CStrain::CStrain(int i, CStrain *f){
+	stotal++;
 	ID=i; 
 	N=0.0; 
 	fitness=0.0;
@@ -49,11 +55,13 @@ CStrain::CStrain(int i, CStrain *f){
 		M[i]=0.0;
 	}
 	dead=false;
+	is_leaf=true;
 }
 
 //Cleans the allocated memory if not yet cleaned 
 CStrain::~CStrain(){
 	if( M!=NULL) delete[] M;
+	stotal--;
 }
 
 //Returns the pointer to the father if not root node
@@ -119,6 +127,23 @@ void CStrain::die(){
 	M=NULL;
 }
 
+void CStrain::trim(CStrain *exclude){
+	std::vector<CStrain*>::iterator it, it0;
+	for(it=neighbours.begin(); it!=neighbours.end(); it++){
+		if((*it)==exclude)continue;
+		if((*it)->is_leaf and (*it)->dead) {
+			it0=it;
+			it--;
+			delete (*it0);
+			neighbours.erase(it0);
+		}
+		else{
+			(*it)->trim(this);
+		}
+	}
+	if(neighbours.size()==1) is_leaf=true;
+
+}
 
 
 #endif

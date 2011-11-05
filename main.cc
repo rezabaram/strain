@@ -143,6 +143,8 @@ void Update(){
 	if(iTime%inf_period==0) Genetic_Drift();
 	Mutations();
 	Update_Immunes();
+	//trims the dead leaves
+	if(iTime%100==0) top->trim();
 }
 
 void Run(){
@@ -155,7 +157,7 @@ void Run(){
 		Update();
 		if(strains.size()==0) break;
 
-		cout << t <<"    "<< stotal <<"    "<< strains.size() <<"    ";
+		cout << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    ";
 
 
 		sumAllI=0.;
