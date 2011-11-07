@@ -1,7 +1,10 @@
 #include <iostream>
+#include <fstream>
+#include <sstream>
 #include <list>
 #include <tr1/random>
 #include "strain.h"
+#include "tools.h"
 #include"parameters.h"
 #include <ctime>
 std::tr1::ranlux64_base_01 eng;
@@ -50,7 +53,7 @@ void define_cross_im(){
 
 void Initial_Conditions(){
 	//eng.seed(time(0));
-	eng.seed(0);
+	eng.seed(1);
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
@@ -105,12 +108,11 @@ void Genetic_Drift(){
 
 		if(rnd<1) {
 			it=remove(it);
-			it++;
 		}
 		else{
 			(*it)->N=rnd;
-			it++;
 		}
+	it++;
 	}
 
 }
@@ -150,7 +152,12 @@ void Update(){
 void Run(){
 	double sumAllI;
 
-	
+	ofstream singleouts[250];	
+	for(int i=0; i<250; i++){
+		string name ="single"+stringify(i,5,'0');
+		singleouts[i].open(name.c_str());
+		}
+
 	unsigned int iTimeMax=tMax/dt;
 	for(iTime=1; iTime<=iTimeMax; iTime++){
 		t=iTime*dt;
@@ -166,23 +173,23 @@ void Run(){
 		for(it=strains.begin(); it!=strains.end(); it++){
 			sumAllI+=(*it)->N;
 			//cout << sumAllI <<"    "<<"    "<< (*it)->N;
+			if((*it)->ID<1000 and (*it)->ID>=750){
+				singleouts[(*it)->ID-750]<< t<<"  "<<(*it)->N <<endl;
+				}
 		}
 		cout << CStrain::max_dist<<"  ";
 		cout << sumAllI << endl;
-		/*
-		if(fabs(t-15)<0.000001){
-			for(it=strains.begin(); it!=strains.end(); it++){
-				cerr<< (*it)->neighbours.size()  <<"   "<<(*it)->count_neigh()  <<endl;	
+		if(iTime==500){
+			ofstream out("tree");
+			top->print(out);
+			out.close();
 			}
-		exit(0);
-		}
-		*/
 	}
 	
 }
 
 void finish(){
-
+	
 	delete top;
 }
 

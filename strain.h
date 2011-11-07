@@ -17,6 +17,7 @@ class CStrain{
 	CStrain *father();
 	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
 	void get_infected(double *sumN, int distance=0, CStrain *exclude=NULL);
+	void print(ostream &out);
 
 	double fitness;
 	double N;
@@ -142,6 +143,21 @@ void CStrain::trim(){
 	if(neighbours.size()==1) is_leaf=true;
 
 }
+
+void CStrain::print(ostream &out){
+	out<<ID<< "   "<<N<<"   "<<neighbours.size()-1<<"  ";
+	std::vector<CStrain*>::iterator it;
+	for(it=neighbours.begin(); it!=neighbours.end(); it++){
+		if((*it)==NULL)continue;
+		out<<(*it)->ID<< "   ";
+	}
+	out<<endl;
+	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
+		(*it)->print(out);
+	//	out<<endl;
+	}
+}
+
 /*
 void print(ostream &out, double x, double y, double &dx){
 	static double dx=0.05;
