@@ -88,7 +88,7 @@ void Immune_Selection(){
 
 //removes an element from the list and returns 
 //the iterator to the PREVIOUS element
-list<CStrain*>::iterator remove(list<CStrain*>::iterator it){
+list<CStrain*>::iterator remove(list<CStrain*>::iterator &it){
 		list<CStrain*>::iterator it0;
 		//make sure we dont jump over a strain while erasing 
 		(*it)->die();
@@ -97,6 +97,7 @@ list<CStrain*>::iterator remove(list<CStrain*>::iterator it){
 		strains.erase(it0);
 		return it;
 }
+
 void Genetic_Drift(){
 	//applying to all strains
 	list<CStrain*>::iterator it=strains.begin();
