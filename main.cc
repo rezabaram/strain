@@ -7,6 +7,7 @@
 #include "tools.h"
 #include"parameters.h"
 #include <ctime>
+#include <math.h>
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
 
@@ -22,10 +23,11 @@ double t;
 unsigned int iTime=0;
 //Cross immunity matrix
 double chi[rmax+1];
-
+int Nfiles=1021;
 
 void define_cross_im(){
 
+/*
 	double a=1;
 	for(int i=0; i<=rmax; i++){
 		chi[i]=a;
@@ -33,27 +35,33 @@ void define_cross_im(){
 		//cout << chi[i] << "    ";
 	}
 	//cout << endl;
-
-/*
-	chi[0]=0.1;
-	chi[1]=0.9;
-	chi[2]=0.85;
-	chi[3]=0.3;
-	chi[4]=0.1;
-	chi[5]=0.01;
-	chi[5]=0.5;
-	chi[6]=0.4;
-	chi[7]=0.0;
-	chi[8]=0.0;
-	chi[9]=0.0;
-	chi[10]=0.0;
 */
+
+
+	chi[0]=1.;
+	chi[1]=0.99;
+	chi[2]=0.95;
+	chi[3]=0.9;
+	chi[4]=0.85;
+	chi[5]=0.8;
+	chi[5]=0.7;
+	chi[6]=0.65;
+	chi[7]=0.5;
+	chi[8]=0.2;
+	chi[9]=0.2;
+	chi[10]=0.2;
+	chi[11]=0.2;
+	chi[12]=0.2;
+	chi[13]=0.2;
+	chi[14]=0.2;
+	chi[15]=0.2;
+
 }
 
 
 void Initial_Conditions(){
-	//eng.seed(time(0));
-	eng.seed(1);
+	eng.seed(time(0));
+	//eng.seed(1);
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
@@ -147,14 +155,14 @@ void Update(){
 	Mutations();
 	Update_Immunes();
 	//trims the dead leaves
-	if(iTime%100==0) top->trim();
+	//if(iTime%100==0) top->trim();
 }
 
 void Run(){
 	double sumAllI;
-
-	ofstream singleouts[250];	
-	for(int i=0; i<250; i++){
+	int s=0;
+	ofstream singleouts[Nfiles];	
+	for(int i=0; i<Nfiles; i++){
 		string name ="single"+stringify(i,5,'0');
 		singleouts[i].open(name.c_str());
 		}
@@ -164,9 +172,13 @@ void Run(){
 		t=iTime*dt;
 		Update();
 		if(strains.size()==0) break;
+	
+		//if(strains.size()>1000 and iTime%(2*inf_period)==0) {mut_rate-=0.0001; s=1;}
 
-		cout << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    ";
-
+		//if(strains.size()<1000 and iTime%(2*inf_period)==0 and s==1) {mut_rate+=0.0001;}
+		//if(strains.size()<500 and iTime%inf_period==0) mut_rate+=0.0001;
+	
+		cout << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
 
 		sumAllI=0.;
 
@@ -174,9 +186,9 @@ void Run(){
 		for(it=strains.begin(); it!=strains.end(); it++){
 			sumAllI+=(*it)->N;
 			//cout << sumAllI <<"    "<<"    "<< (*it)->N;
-			if((*it)->ID<1000 and (*it)->ID>=750){
-				singleouts[(*it)->ID-750]<< t<<"  "<<(*it)->N <<endl;
-				}
+			if((*it)->ID<Nfiles and (*it)->ID>=0){
+				singleouts[(*it)->ID]<< t<<"  "<<(*it)->N <<endl;
+			}
 		}
 		cout << CStrain::max_dist<<"  ";
 		cout << sumAllI << endl;
@@ -184,7 +196,7 @@ void Run(){
 			ofstream out("tree");
 			top->print(out);
 			out.close();
-			}
+		}
 	}
 	
 }
