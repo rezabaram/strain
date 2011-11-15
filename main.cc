@@ -28,11 +28,12 @@ CStrain *top=NULL;
 double t;
 unsigned int iTime=0;
 //Cross immunity matrix
-double chi[rmax+1];
+double *chi;
 const unsigned int Nfiles=100;
 
 void define_cross_im(){
 
+	chi=new double[rmax+1];
 /*
 	double a=1;
 	for(int i=0; i<=rmax; i++){
@@ -176,7 +177,7 @@ void Update(){
 	Mutations();
 	Update_Immunes();
 	//trims the dead leaves
-	//if(iTime%100==0) top->trim();
+	if(iTime%100==0) top->trim();
 }
 
 
@@ -235,9 +236,19 @@ void Run(){
 			//top->print(tree1);
 			//tree1.close();
 
-			ofstream tree2("tree2");
-			SaveState(tree2, allstrains);
-			tree2.close();
+			ofstream tree("tree");
+			SaveState(tree, allstrains);
+			tree.close();
+
+			//testing if the file was read correctly
+			//vector <CStrain*> temp;
+			//ifstream treein("tree");
+			//ReadState(treein, temp);
+			//treein.close();
+
+			//ofstream tree2("tree2");
+			//SaveState(tree2, temp);
+			//tree2.close();
 		}
 	}
 	

@@ -1,7 +1,7 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-const int rmax=15;
+int rmax=15;
 const int N0=10;
 const double Npop=1e+6;
 const double R0=1.2;

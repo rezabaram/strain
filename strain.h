@@ -10,7 +10,7 @@ class CStrain{
 	public:
 	CStrain(int i, CStrain *f);
 	~CStrain();
-	CStrain SetAlive();
+	void SetAlive();
 	double sumM();
 	double WeightedSumM(double *chi);
 	int count_neigh();
@@ -43,7 +43,6 @@ int CStrain::max_dist=0;
 //Constructor take an int for ID and the point of the
 //father node
 CStrain::CStrain(int i, CStrain *f){
-	cerr<< "here" <<endl;
 	stotal++;
 	ID=i; 
 	N=0.0; 
@@ -55,18 +54,13 @@ CStrain::CStrain(int i, CStrain *f){
 
 	dead=true;
 	is_leaf=true;
-//	if(ID>=0) 
-	//this->SetAlive();
-	N=1.0; 
-	dead=false;
-	M=new double[rmax+1];
-	for(int i=0;i<=rmax;i++){
-		M[i]=0.0;
+	if(ID>=0) {
+		SetAlive();
+		N=1;
 	}
 }
 
-CStrain CStrain::SetAlive(){
-	N=1.0; 
+void CStrain::SetAlive(){
 	dead=false;
 	M=new double[rmax+1];
 	for(int i=0;i<=rmax;i++){
@@ -192,9 +186,9 @@ void CStrain::print(ostream &out){
 void CStrain::print_node(ostream &out)const{
 	
 	out<<ID<< "   "<<N<<"   ";
+	out<<fitness<<"  ";
 	if(!dead) {
 		assert(N>0);
-		out<<rmax+1<<"  ";
 		for(int i=0; i<rmax+1; i++){
 	 		out<<M[i]<<"  ";
 		}
