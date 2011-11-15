@@ -1,6 +1,7 @@
 #ifndef STRAIN_H
 #define STRAIN_H
 #include <vector>
+#include<assert.h>
 #include"parameters.h"
 
 using namespace std;
@@ -9,6 +10,7 @@ class CStrain{
 	public:
 	CStrain(int i, CStrain *f);
 	~CStrain();
+	CStrain SetAlive();
 	double sumM();
 	double WeightedSumM(double *chi);
 	int count_neigh();
@@ -17,7 +19,9 @@ class CStrain{
 	CStrain *father();
 	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
 	void get_infected(double *sumN, int distance=0, CStrain *exclude=NULL);
+	void get_diversity(double &div, int distance=0, CStrain *exclude=NULL);
 	void print(ostream &out);
+	void print_node(ostream &out)const;
 
 	double fitness;
 	double N;
@@ -39,6 +43,7 @@ int CStrain::max_dist=0;
 //Constructor take an int for ID and the point of the
 //father node
 CStrain::CStrain(int i, CStrain *f){
+	cerr<< "here" <<endl;
 	stotal++;
 	ID=i; 
 	N=0.0; 
@@ -48,12 +53,25 @@ CStrain::CStrain(int i, CStrain *f){
 	}
 	neighbours.push_back(f);
 
+	dead=true;
+	is_leaf=true;
+//	if(ID>=0) 
+	//this->SetAlive();
+	N=1.0; 
+	dead=false;
 	M=new double[rmax+1];
 	for(int i=0;i<=rmax;i++){
 		M[i]=0.0;
 	}
+}
+
+CStrain CStrain::SetAlive(){
+	N=1.0; 
 	dead=false;
-	is_leaf=true;
+	M=new double[rmax+1];
+	for(int i=0;i<=rmax;i++){
+		M[i]=0.0;
+	}
 }
 
 //Cleans the allocated memory if not yet cleaned 
@@ -77,10 +95,25 @@ void CStrain::get_infected(double *sumN, int distance, CStrain *exclude){
 	if(distance>max_dist)max_dist=distance;
 	if(distance==rmax) return;
 
+	
+	if(father()!=NULL and father()!=exclude) 
+		father()->get_infected(sumN, distance+1, this);
+
+	if(is_leaf) return;
+	for(int i=1; i<neighbours.size(); i++){
+		if(neighbours.at(i)==exclude) continue;
+		neighbours.at(i)->get_infected(sumN, distance+1, this);
+	}
+	return;
+}
+
+void CStrain::get_diversity(double &diversity, int distance, CStrain *exclude){
+	diversity+=N*distance;
+
 	for(int i=0; i<neighbours.size(); i++){
 		if(neighbours.at(i)==NULL) continue;
 		if(neighbours.at(i)==exclude) continue;
-		neighbours.at(i)->get_infected(sumN, distance+1, this);
+		neighbours.at(i)->get_diversity(diversity, distance+1, this);
 	}
 	return;
 }
@@ -127,23 +160,20 @@ void CStrain::die(){
 }
 
 void CStrain::trim(){
+	if(is_leaf)return;
 	std::vector<CStrain*>::iterator it, it0;
+	int alive_branches=0;
 	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
-		if((*it)->is_leaf and (*it)->dead) {
-			//cut_branch=true;
-			it0=it;
-			it--;
-			delete (*it0);
-			neighbours.erase(it0);
-		}
-		else{
+		if(!(*it)->is_leaf or !(*it)->dead){
 			(*it)->trim();
+			alive_branches++;
 		}
 	}
-	if(neighbours.size()==1) is_leaf=true;
+	if(alive_branches==0) is_leaf=true;
 
 }
 
+//prints the whole tree starting from this node
 void CStrain::print(ostream &out){
 	out<<ID<< "   "<<N<<"   "<<neighbours.size()-1<<"  ";
 	std::vector<CStrain*>::iterator it;
@@ -158,6 +188,78 @@ void CStrain::print(ostream &out){
 	}
 }
 
+//prints N, number of neighbours and their IDs
+void CStrain::print_node(ostream &out)const{
+	
+	out<<ID<< "   "<<N<<"   ";
+	if(!dead) {
+		assert(N>0);
+		out<<rmax+1<<"  ";
+		for(int i=0; i<rmax+1; i++){
+	 		out<<M[i]<<"  ";
+		}
+	}
+
+	if(is_leaf) {
+		out<<0<<endl;	
+		return;
+	}
+
+	std::vector<CStrain*>::const_iterator it=neighbours.begin();
+	int neigh=neighbours.size();
+	if((*it)==NULL)neigh--;
+	out<<neigh<<"  ";
+	for(it=neighbours.begin(); it!=neighbours.end(); it++){
+		if((*it)==NULL)continue;
+		out<<(*it)->ID<< "   ";
+	}
+	out<<endl;
+}
+/*
+//FIXME
+CStrain::CStrain(stringstream &ss){
+	stotal++;
+	input>>ID>>N;
+	fitness=0.0;
+	
+
+	dead=false;
+	is_leaf=true;
+
+	M=new double[rmax+1];
+	for(int i=0;i<=rmax;i++){
+		M[i]=0.0;
+	}
+
+	int fID;
+	input>>fID
+	if(f!=NULL){
+		f->add_neighbour(this);
+	}
+	neighbours.push_back(f);
+}
+
+void CStrain::read_node(stringsream &ss){
+
+	//Print M's if not dead
+	if(!dead) {
+		input<<rmax+1<<"  ";
+		for(int i=0; i<rmax+1; i++){
+	 		input<<M[i]<<"  ";
+		}
+	}
+	else input<<0<<"  ";
+	
+	std::vector<CStrain*>::iterator it=neighbours.begin();
+	int neigh=neighbours.size();
+	if((*it)==NULL)neigh--;
+	input<<neigh<<"  ";
+	for(it=neighbours.begin(); it!=neighbours.end(); it++){
+		if((*it)==NULL)continue;
+		input<<(*it)->ID<< "   ";
+	}
+}
+*/
 /*
 void print(ostream &out, double x, double y, double &dx){
 	static double dx=0.05;

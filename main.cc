@@ -2,20 +2,26 @@
 #include <fstream>
 #include <sstream>
 #include <list>
+#include <ctime>
+#include <math.h>
+#include "timer.h"
 #include <tr1/random>
 #include "strain.h"
 #include "tools.h"
 #include"parameters.h"
-#include <ctime>
-#include <math.h>
+#include"io.h"
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
+
+ofstream logtime("logtime");
+CTimer timer;
 
 using namespace std;
 
 //To to be used for assigning ID's
 int stotal=0;
 //List of all alive strains
+vector<CStrain *> allstrains;
 list<CStrain*> strains;
 CStrain *top=NULL;
 //time
@@ -23,7 +29,7 @@ double t;
 unsigned int iTime=0;
 //Cross immunity matrix
 double chi[rmax+1];
-int Nfiles=1021;
+const unsigned int Nfiles=100;
 
 void define_cross_im(){
 
@@ -60,14 +66,15 @@ void define_cross_im(){
 
 
 void Initial_Conditions(){
-	eng.seed(time(0));
-	//eng.seed(1);
+	//eng.seed(time(0));
+	eng.seed(10);
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
 	stotal++;
 	top->N=N0;
 	strains.push_back(top);
+	allstrains.push_back(top);
 	define_cross_im();
 }
 
@@ -75,14 +82,15 @@ void Initial_Conditions(){
 //and add to the list
 void Mutate(CStrain *pfather){
 	CStrain *ps = new CStrain(stotal,pfather);
-	ps->N=1;
 	pfather->N--;
 	if(pfather->N<1) pfather->die();
 
 	strains.push_back(ps);
+	allstrains.push_back(ps);
 
 	stotal++;
 }
+
 
 void Immune_Selection(){
 	list<CStrain*>::iterator it;
@@ -149,6 +157,19 @@ void Update_Immunes(){
 
 }
 
+double Diversity(){
+	list<CStrain*>::iterator it;
+	double diversity=0;
+	for(it=strains.begin(); it!=strains.end(); it++){
+		double div=0;
+		(*it)->get_diversity(div,0,(*it));
+		//(*it)->get_diversity(div);
+		diversity+=(*it)->N*div/Npop;
+	}
+	diversity=diversity/2/Npop;
+	return diversity;
+}
+
 void Update(){
 	Immune_Selection();
 	if(iTime%inf_period==0) Genetic_Drift();
@@ -158,10 +179,35 @@ void Update(){
 	//if(iTime%100==0) top->trim();
 }
 
+
+void output(ostream &out){
+	double sumAllI=0.;
+
+	list<CStrain*>::iterator it;
+	for(it=strains.begin(); it!=strains.end(); it++){
+		sumAllI+=(*it)->N;
+	}
+	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
+	out << CStrain::max_dist<<"  ";
+//	out << Diversity() <<"  ";
+	out << sumAllI <<"   ";
+	out<< endl;
+}
+
+ofstream singleouts[Nfiles];	
+
+void PrintSingleInfected(){
+	list<CStrain*>::iterator it;
+	for(it=strains.begin(); it!=strains.end(); it++){
+		if((*it)->ID<Nfiles and (*it)->ID>=0){
+			singleouts[(*it)->ID]<< t<<"  "<<(*it)->N <<endl;
+		}
+	}
+}
+
 void Run(){
-	double sumAllI;
+	ofstream out("out");
 	int s=0;
-	ofstream singleouts[Nfiles];	
 	for(int i=0; i<Nfiles; i++){
 		string name ="single"+stringify(i,5,'0');
 		singleouts[i].open(name.c_str());
@@ -169,6 +215,8 @@ void Run(){
 
 	unsigned int iTimeMax=tMax/dt;
 	for(iTime=1; iTime<=iTimeMax; iTime++){
+		//logtime<<timer.read()/strains.size()<<"   "<<t<<endl;
+		logtime<<timer.read()<<"   "<<t<<endl;
 		t=iTime*dt;
 		Update();
 		if(strains.size()==0) break;
@@ -178,24 +226,18 @@ void Run(){
 		//if(strains.size()<1000 and iTime%(2*inf_period)==0 and s==1) {mut_rate+=0.0001;}
 		//if(strains.size()<500 and iTime%inf_period==0) mut_rate+=0.0001;
 	
-		cout << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
 
-		sumAllI=0.;
+		PrintSingleInfected();
+		output(out);
+		if(iTime==2500){
+			//prints two versions of the tree
+			//ofstream tree1("tree1");
+			//top->print(tree1);
+			//tree1.close();
 
-		list<CStrain*>::iterator it;
-		for(it=strains.begin(); it!=strains.end(); it++){
-			sumAllI+=(*it)->N;
-			//cout << sumAllI <<"    "<<"    "<< (*it)->N;
-			if((*it)->ID<Nfiles and (*it)->ID>=0){
-				singleouts[(*it)->ID]<< t<<"  "<<(*it)->N <<endl;
-			}
-		}
-		cout << CStrain::max_dist<<"  ";
-		cout << sumAllI << endl;
-		if(iTime==500){
-			ofstream out("tree");
-			top->print(out);
-			out.close();
+			ofstream tree2("tree2");
+			SaveState(tree2, allstrains);
+			tree2.close();
 		}
 	}
 	
