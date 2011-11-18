@@ -70,7 +70,7 @@ void define_cross_im(){
 	double d0=10.;
 */
 
-
+/*
 	double A=0.3; //lower asymptote
 	double K=1.; //upper asymptote
 	double B=0.5; 
@@ -81,6 +81,18 @@ void define_cross_im(){
 		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));
 		//cout << chi[d] << "    ";	
 	} 
+	//cout << endl;
+*/
+
+	double a=2.;
+	double asymp=0.3;
+
+	chi[0]=1.;
+
+	for(int d=1; d<=rmax; d++){
+		chi[d] = a/d + asymp;
+		//cout << chi[d] << "    ";
+	}
 	//cout << endl;
 
 }
