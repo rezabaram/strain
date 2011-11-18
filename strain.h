@@ -22,6 +22,8 @@ class CStrain{
 	void get_diversity(double &div, int distance=0, CStrain *exclude=NULL);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
+	void print(ostream &out, double x, double y);
+	double cal_print_spaces();
 
 	double fitness;
 	double N;
@@ -32,6 +34,8 @@ class CStrain{
 	static int max_dist;
 	std::vector<CStrain*> neighbours;
 	static unsigned int stotal;
+	private:
+	double print_space;
 };
 unsigned int CStrain::stotal=0;
 
@@ -43,6 +47,7 @@ int CStrain::max_dist=0;
 //Constructor take an int for ID and the point of the
 //father node
 CStrain::CStrain(int i, CStrain *f){
+	print_space=0.05;
 	stotal++;
 	ID=i; 
 	N=0.0; 
@@ -254,16 +259,31 @@ void CStrain::read_node(stringsream &ss){
 	}
 }
 */
-/*
-void print(ostream &out, double x, double y, double &dx){
-	static double dx=0.05;
-	out<<x<<"  "<<y<<"  "<<x+dx<<"   "<<y<<endl;
-	double l=(neighbours.size()-1)*dx;
-	out<<x<<"  "<<y<<"  "<<x+dx<<"   "<<y<<endl;
-	for(int i=0; i<neighbours.size(); i++){
-		out<<x<<"  "<<y-l/2.0+i*dx<<"  "<<x+dx<<"   "<<y-l/2.0+i*dx<endl;
+void CStrain::print(ostream &out, double x, double y){
+	if(neighbours.size()<2)
+		out<<"c "<<x<<"  "<<y<<" 0.02"<<endl;
+	static double dL=0.05;
+	cal_print_spaces();
+	double L=print_space;
+	out<<"l "<<x<<"  "<<y<<"  ";
+	x+=dL;
+	out<<"l "<<x<<"   "<<y<<endl;
+	y+=L/2.;
+	double nn=neighbours.size()-1.;
+	for(int i=1; i<neighbours.size(); i++){
+		y-=(i-1.)*L/(nn);
+		out<<"l "<<x<<"  "<<y<<"  "<<x+dL<<"   "<<y<<endl;
+		neighbours.at(i)->print(out,x+dL, y);
 	}
 }
-*/
+
+double CStrain::cal_print_spaces(){
+	if(neighbours.size()==1)return print_space;
+	
+	cerr<< print_space <<endl;
+	for(int i=1; i<neighbours.size(); i++)
+		print_space+=neighbours.at(i)->cal_print_spaces();
+
+}
 
 #endif

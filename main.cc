@@ -87,7 +87,9 @@ void define_cross_im(){
 
 
 void Initial_Conditions(){
-	eng.seed(time(0));
+	int seed=time(0);
+	cerr<< "Seed: "<<seed <<endl;
+	eng.seed(seed);
 	//eng.seed(10);
 	stotal=0;
 	//creating the root node
@@ -267,10 +269,14 @@ void Run(){
 			//top->print(tree1);
 			//tree1.close();
 
-			ofstream tree("tree");
-			SaveState(tree, allstrains);
-			tree.close();
+			//ofstream tree("tree");
+			//SaveState(tree, allstrains);
+			//tree.close();
 			
+			cerr<< "tree printed " <<endl;
+			ofstream tree("tree");
+			top->print(tree, 0, 0.5);
+			tree.close();
 			//testing if the file was read correctly
 			//vector <CStrain*> temp;
 			//ifstream treein("tree");
