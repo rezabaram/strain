@@ -22,4 +22,10 @@ set nokey
 
 plot $globaloptions $plotarg
 
+set output 'out.eps'
+set terminal post enh col
+replot
+
 EOF
+
+convert out.eps out.pdf

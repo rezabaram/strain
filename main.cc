@@ -10,6 +10,7 @@
 #include "tools.h"
 #include"parameters.h"
 #include"io.h"
+#include"signal.h"
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
 
@@ -29,7 +30,7 @@ double t;
 unsigned int iTime=0;
 //Cross immunity matrix
 double *chi;
-const unsigned int Nfiles=100;
+const unsigned int Nfiles=1000;
 
 void define_cross_im(){
 
@@ -44,36 +45,56 @@ void define_cross_im(){
 	//cout << endl;
 */
 
+// step function with rmax=10;
+/*
+	double a=1.;
 
-	chi[0]=1.;
-	chi[1]=0.99;
-	chi[2]=0.95;
-	chi[3]=0.9;
-	chi[4]=0.85;
-	chi[5]=0.8;
-	chi[5]=0.7;
-	chi[6]=0.65;
-	chi[7]=0.5;
-	chi[8]=0.2;
-	chi[9]=0.2;
-	chi[10]=0.2;
-	chi[11]=0.2;
-	chi[12]=0.2;
-	chi[13]=0.2;
-	chi[14]=0.2;
-	chi[15]=0.2;
+	for(int d=0; d<=rmax; d++){
+		chi[d]=a;
+	}	
+*/
+
+/*
+	double A=0.; //lower asymptote
+	double K=1.; //upper asymptote
+	double B=2.5; 
+	double Q=1.;
+	double d0=10.;
+*/
+
+/*
+	double A=0.; //lower asymptote
+	double K=1.; //upper asymptote
+	double B=0.5; 
+	double Q=1.;
+	double d0=10.;
+*/
+
+
+	double A=0.3; //lower asymptote
+	double K=1.; //upper asymptote
+	double B=0.5; 
+	double Q=1.;
+	double d0=10.;
+
+	for(int d=0; d<=rmax; d++){
+		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));
+		//cout << chi[d] << "    ";	
+	} 
+	//cout << endl;
 
 }
 
 
 void Initial_Conditions(){
-	//eng.seed(time(0));
-	eng.seed(10);
+	eng.seed(time(0));
+	//eng.seed(10);
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
 	stotal++;
 	top->N=N0;
+	top->M[0]=100000.;
 	strains.push_back(top);
 	allstrains.push_back(top);
 	define_cross_im();
@@ -190,7 +211,7 @@ void output(ostream &out){
 	}
 	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
 	out << CStrain::max_dist<<"  ";
-//	out << Diversity() <<"  ";
+	//out << Diversity() <<"  ";
 	out << sumAllI <<"   ";
 	out<< endl;
 }
@@ -212,23 +233,33 @@ void Run(){
 	for(int i=0; i<Nfiles; i++){
 		string name ="single"+stringify(i,5,'0');
 		singleouts[i].open(name.c_str());
-		}
+	}
 
 	unsigned int iTimeMax=tMax/dt;
 	for(iTime=1; iTime<=iTimeMax; iTime++){
+
+		if(bSignal==0) {
+        		mut_rate*=0.95;
+			//mut_rate-=0.0001;
+                  	bSignal=-1;
+                       	cerr<< "New Mutation rate:" << mut_rate <<"   "<< "Time:" << iTime*dt << endl;
+                }
+               	if(bSignal==1) {
+			mut_rate*=1.15;
+           		//mut_rate+=0.0001;
+                	bSignal=-1;
+                       	cerr<< "New Mutation rate:" << mut_rate <<"   "<< "Time:" << iTime*dt << endl;
+                }
+
+
 		//logtime<<timer.read()/strains.size()<<"   "<<t<<endl;
 		logtime<<timer.read()<<"   "<<t<<endl;
 		t=iTime*dt;
 		Update();
 		if(strains.size()==0) break;
 	
-		//if(strains.size()>1000 and iTime%(2*inf_period)==0) {mut_rate-=0.0001; s=1;}
-
-		//if(strains.size()<1000 and iTime%(2*inf_period)==0 and s==1) {mut_rate+=0.0001;}
-		//if(strains.size()<500 and iTime%inf_period==0) mut_rate+=0.0001;
-	
-
 		PrintSingleInfected();
+		//if(iTime%200==0) 
 		output(out);
 		if(iTime==2500){
 			//prints two versions of the tree
@@ -239,7 +270,7 @@ void Run(){
 			ofstream tree("tree");
 			SaveState(tree, allstrains);
 			tree.close();
-
+			
 			//testing if the file was read correctly
 			//vector <CStrain*> temp;
 			//ifstream treein("tree");
@@ -260,10 +291,18 @@ void finish(){
 }
 
 int main(){
+
+	signal(30,SignalControlReport);
+	signal(31,SignalControlReport);
+	signal(32,SignalControlReport);
+
 	Initial_Conditions();
+
 	Run();
 	finish();
+
 return 0;
+
 }
 
 
