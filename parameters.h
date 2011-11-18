@@ -26,6 +26,11 @@ const double tMax=1000.;
 // git commit -a -m "your comment"
 // git push origin ganna:ganna
 
+// git config --global color.log
+// git config --global color.diff always
+
+// git add signal.h
+
 // ./strain &
 // kill -30 27241 (the latter is the process number)
 // ps
