@@ -37,7 +37,7 @@ void ReadState(istream &input, vector<CStrain*> &strains){
 	}
 
 	//Insert the line string into a stream
-	for(int i=0; i<strains.size(); i++){
+	for(size_t i=0; i<strains.size(); i++){
 		stringstream ss(lines.at(i));
 		
 
@@ -54,13 +54,13 @@ void ReadState(istream &input, vector<CStrain*> &strains){
 
 		if(! s.dead){
 			//read M's
-			for(int i=0; i<=rmax; i++){
+			for(size_t i=0; i<=rmax; i++){
 				ss>>s.M[i];
 			}
 		}
-		int nneigh;
+		size_t nneigh;
 		ss>>nneigh;
-		for(int i=0; i<nneigh; i++){
+		for(size_t i=0; i<nneigh; i++){
 			int neigh_id;
 			ss>>neigh_id;
 			s.add_neighbour(strains.at(neigh_id));

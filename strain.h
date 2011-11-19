@@ -3,8 +3,10 @@
 #include <vector>
 #include<assert.h>
 #include"parameters.h"
+#include"tools.h"
 
 using namespace std;
+
 
 class CStrain{
 	public:
@@ -18,12 +20,14 @@ class CStrain{
 	void trim();
 	CStrain *father();
 	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
-	void get_infected(double *sumN, int distance=0, CStrain *exclude=NULL);
-	void get_diversity(double &div, int distance=0, CStrain *exclude=NULL);
+	void get_infected(double *sumN, size_t distance=0, CStrain *exclude=NULL);
+	void get_diversity(double &div, size_t distance=0, CStrain *exclude=NULL);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
 	void print(ostream &out, double x, double y);
-	double cal_print_spaces();
+	void print2(ostream &out, double x, double y);
+	double cal_print_widths();
+	COffset &cal_offsets();
 
 	double fitness;
 	double N;
@@ -31,23 +35,26 @@ class CStrain{
 	bool dead;
 	bool is_leaf;
 	double *M;
-	static int max_dist;
+	static unsigned int max_dist;
 	std::vector<CStrain*> neighbours;
-	static unsigned int stotal;
+	static unsigned stotal;
+	COffset offset;
+	double print_width;
+	int color;
 	private:
-	double print_space;
+	static const double base_print_width=0.015;
 };
 unsigned int CStrain::stotal=0;
 
 //this is just used in function get_infected()
 //to find out what was the maximum distance
 //ever reached between the alive nodes
-int CStrain::max_dist=0;
+unsigned int CStrain::max_dist=0;
 
 //Constructor take an int for ID and the point of the
 //father node
 CStrain::CStrain(int i, CStrain *f){
-	print_space=0.05;
+	print_width= base_print_width;
 	stotal++;
 	ID=i; 
 	N=0.0; 
@@ -59,6 +66,7 @@ CStrain::CStrain(int i, CStrain *f){
 
 	dead=true;
 	is_leaf=true;
+	color=1;
 	if(ID>=0) {
 		SetAlive();
 		N=1;
@@ -67,8 +75,9 @@ CStrain::CStrain(int i, CStrain *f){
 
 void CStrain::SetAlive(){
 	dead=false;
+	color=0;
 	M=new double[rmax+1];
-	for(int i=0;i<=rmax;i++){
+	for(size_t i=0;i<=rmax;i++){
 		M[i]=0.0;
 	}
 }
@@ -89,7 +98,7 @@ CStrain* CStrain::father(){
 //sumN[1] is the sum of N's of all strains at distance 1
 //....
 //sumN[rmax] is the sum of N's of all strains at distance rmax
-void CStrain::get_infected(double *sumN, int distance, CStrain *exclude){
+void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
 	sumN[distance]+=N;
 	if(distance>max_dist)max_dist=distance;
 	if(distance==rmax) return;
@@ -99,17 +108,17 @@ void CStrain::get_infected(double *sumN, int distance, CStrain *exclude){
 		father()->get_infected(sumN, distance+1, this);
 
 	if(is_leaf) return;
-	for(int i=1; i<neighbours.size(); i++){
+	for(size_t i=1; i<neighbours.size(); i++){
 		if(neighbours.at(i)==exclude) continue;
 		neighbours.at(i)->get_infected(sumN, distance+1, this);
 	}
 	return;
 }
 
-void CStrain::get_diversity(double &diversity, int distance, CStrain *exclude){
+void CStrain::get_diversity(double &diversity, size_t distance, CStrain *exclude){
 	diversity+=N*distance;
 
-	for(int i=0; i<neighbours.size(); i++){
+	for(size_t i=0; i<neighbours.size(); i++){
 		if(neighbours.at(i)==NULL) continue;
 		if(neighbours.at(i)==exclude) continue;
 		neighbours.at(i)->get_diversity(diversity, distance+1, this);
@@ -121,7 +130,7 @@ void CStrain::get_diversity(double &diversity, int distance, CStrain *exclude){
 //Returns the number of alive neighbours of the strain
 int CStrain::count_neigh(){
 	int count=0;
-	for (int i=0; i<neighbours.size();i++){
+	for (size_t i=0; i<neighbours.size();i++){
 		if(neighbours.at(i)==NULL) continue;
 		if(! neighbours.at(i)->dead) count++;
 	}
@@ -131,7 +140,7 @@ int CStrain::count_neigh(){
 
 double CStrain::sumM(){
 	double sum=0.0;
-	for(int i=0; i<=rmax; i++){
+	for(size_t i=0; i<=rmax; i++){
 		sum+=M[i];
 	}
 	return sum;
@@ -143,7 +152,7 @@ double CStrain::sumM(){
 //with same lenght as M
 double CStrain::WeightedSumM(double *chi){
 	double sum=0.0;
-	for(int i=0; i<=rmax; i++){
+	for(size_t i=0; i<=rmax; i++){
 		sum+=M[i]*chi[i];
 	}
 	return sum;
@@ -154,6 +163,7 @@ double CStrain::WeightedSumM(double *chi){
 void CStrain::die(){
 	N=0.0;
 	dead=true;
+	color=1;
 	delete[] M;
 	M=NULL;
 }
@@ -162,13 +172,17 @@ void CStrain::trim(){
 	if(is_leaf)return;
 	std::vector<CStrain*>::iterator it, it0;
 	int alive_branches=0;
+	assert(neighbours.size()>1);
 	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
 		if(!(*it)->is_leaf or !(*it)->dead){
 			(*it)->trim();
 			alive_branches++;
 		}
 	}
-	if(alive_branches==0) is_leaf=true;
+	if(alive_branches==0 and dead){
+		 is_leaf=true;
+		  if(neighbours.size()>1) color=2;//color for dead branch
+		}
 
 }
 
@@ -194,7 +208,7 @@ void CStrain::print_node(ostream &out)const{
 	out<<fitness<<"  ";
 	if(!dead) {
 		assert(N>0);
-		for(int i=0; i<rmax+1; i++){
+		for(size_t i=0; i<rmax+1; i++){
 	 		out<<M[i]<<"  ";
 		}
 	}
@@ -259,31 +273,106 @@ void CStrain::read_node(stringsream &ss){
 	}
 }
 */
-void CStrain::print(ostream &out, double x, double y){
-	if(neighbours.size()<2)
-		out<<"c "<<x<<"  "<<y<<" 0.02"<<endl;
-	static double dL=0.05;
-	cal_print_spaces();
-	double L=print_space;
+void CStrain::print2(ostream &out, double x, double y){
+	static double dL=0.02;
+	out<<"c "<<x<<"  "<<y<<" 0.005"<<"  "<<dead<<endl;
+	size_t nn=neighbours.size()-1.;
+	if(nn<1) return;
 	out<<"l "<<x<<"  "<<y<<"  ";
 	x+=dL;
-	out<<"l "<<x<<"   "<<y<<endl;
+	out<<x<<"   "<<y<<endl;
+	if(nn==1){
+		neighbours.at(1)->print2(out,x, y);
+		return;
+	}
+	double L=offset.width();
+	L-=neighbours.at(1)->offset.top;
+	L-=neighbours.at(nn)->offset.bottom;
 	y+=L/2.;
-	double nn=neighbours.size()-1.;
-	for(int i=1; i<neighbours.size(); i++){
-		y-=(i-1.)*L/(nn);
-		out<<"l "<<x<<"  "<<y<<"  "<<x+dL<<"   "<<y<<endl;
-		neighbours.at(i)->print(out,x+dL, y);
+	out<<"l "<<x<<"  "<<y<<"  ";
+	out<<x<<"   "<<y-L<<endl;
+	
+	for(size_t i=1; i<neighbours.size(); i++){
+		//out<<"l "<<x<<"  "<<y<<"  "<<x+dL<<"   "<<y<<endl;
+		neighbours.at(i)->print2(out,x, y);
+		y-=neighbours.at(i)->offset.bottom;
+		if(i<nn)y-=neighbours.at(i+1)->offset.top;
 	}
 }
-
-double CStrain::cal_print_spaces(){
-	if(neighbours.size()==1)return print_space;
+void CStrain::print(ostream &out, double x, double y){
+	static double dL=0.02;
+	out<<"c "<<x<<"  "<<y<<" 0.005"<<"  "<<color<<endl;
+	if(neighbours.size()<2) return;
+	size_t nn=neighbours.size()-1.;
+	size_t ind[neighbours.size()];
+	mysort(neighbours,ind, neighbours.size());
+	if(nn==1){
+		out<<"l "<<x<<"  "<<y<<"  "<<x+dL<<"   "<<y<<endl;
+		neighbours.at(ind[1])->print(out,x+dL, y);
+		return;
+	}
+	double L=offset.width();
+	L-=neighbours.at(ind[1])->offset.top;
+	L-=neighbours.at(ind[nn])->offset.bottom;
+	y+=L/2.;
+	out<<"l "<<x<<"  "<<y<<"  ";
+	out<<x<<"   "<<y-L<<endl;
 	
-	cerr<< print_space <<endl;
-	for(int i=1; i<neighbours.size(); i++)
-		print_space+=neighbours.at(i)->cal_print_spaces();
+	for(size_t i=1; i<=nn; i++){
+		out<<"l "<<x<<"  "<<y<<"  "<<x+dL<<"   "<<y<<endl;
+		neighbours.at(ind[i])->print(out,x+dL, y);
+		y-=neighbours.at(ind[i])->offset.bottom;
+		if(i<nn)y-=neighbours.at(ind[i+1])->offset.top;
+	}
+}
+/*
+	size_t ind[neighbours.size()];
+	mysort(neighbours,ind, neighbours.size());
+*/
 
+COffset &CStrain::cal_offsets(){
+	offset.top=0.0;
+	offset.bottom=0.0;
+	size_t n=neighbours.size()-1;//no. of children
+	cal_print_widths();
+	if(n==0){
+		offset.top=print_width/2;
+		offset.bottom=print_width/2;
+		return offset;
+		}
+	
+	size_t ind[neighbours.size()];
+	mysort(neighbours,ind, neighbours.size());
+
+	COffset &off1=neighbours.at(ind[1])->cal_offsets();
+	if(n==1){
+		offset=off1;
+		return offset;
+		}
+	
+	double size=0;
+	size+=off1.bottom;
+	for(size_t i=2; i<n; i++){
+		COffset &off=neighbours.at(ind[i])->cal_offsets();
+		size+=off.width();
+		}
+	COffset &off2=neighbours.at(ind[n])->cal_offsets();
+	size+=off2.top;
+
+	offset.top=size/2+off1.top;
+	offset.bottom=size/2+off2.bottom;
+
+	return offset;
+}
+
+double CStrain::cal_print_widths(){
+	if(neighbours.size()==1)return base_print_width;
+	
+	print_width=0;
+	for(size_t i=1; i<neighbours.size(); i++)
+		print_width+=neighbours.at(i)->cal_print_widths();
+
+	return print_width;
 }
 
 #endif

@@ -11,6 +11,7 @@
 #include"parameters.h"
 #include"io.h"
 #include"signal.h"
+int seed=time(0);
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
 
@@ -70,24 +71,33 @@ void define_cross_im(){
 	double d0=10.;
 */
 
-
+/*
 	double A=0.3; //lower asymptote
 	double K=1.; //upper asymptote
 	double B=0.5; 
 	double Q=1.;
 	double d0=10.;
 
-	for(int d=0; d<=rmax; d++){
+	for(size_t d=0; d<=rmax; d++){
 		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));
 		//cout << chi[d] << "    ";	
 	} 
+*/
+
+	double m=14./5.;
+	double y0=0.3;
+	double x0=-4.;
+	for(int i=0; i<=rmax; i++){
+		chi[i]=m/(i-x0)+y0;
+	}
+	
 	//cout << endl;
 
 }
 
 
 void Initial_Conditions(){
-	int seed=time(0);
+	//seed=1321702805;
 	cerr<< "Seed: "<<seed <<endl;
 	eng.seed(seed);
 	//eng.seed(10);
@@ -172,11 +182,11 @@ void Update_Immunes(){
 	double sumN[rmax+1];
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		for(int i=0; i<rmax+1; i++) sumN[i]=0; 
+		for(size_t i=0; i<rmax+1; i++) sumN[i]=0; 
 
 		(*it)->get_infected(sumN);
 
-		for(int i=0; i<rmax+1; i++) (*it)->M[i]+=nu*sumN[i]*dt; 
+		for(size_t i=0; i<rmax+1; i++) (*it)->M[i]+=nu*sumN[i]*dt; 
 	}
 
 }
@@ -223,7 +233,7 @@ ofstream singleouts[Nfiles];
 void PrintSingleInfected(){
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		if((*it)->ID<Nfiles and (*it)->ID>=0){
+		if((*it)->ID<(int)Nfiles and (*it)->ID>=0){
 			singleouts[(*it)->ID]<< t<<"  "<<(*it)->N <<endl;
 		}
 	}
@@ -232,7 +242,7 @@ void PrintSingleInfected(){
 void Run(){
 	ofstream out("out");
 	int s=0;
-	for(int i=0; i<Nfiles; i++){
+	for(size_t i=0; i<Nfiles; i++){
 		string name ="single"+stringify(i,5,'0');
 		singleouts[i].open(name.c_str());
 	}
@@ -263,7 +273,7 @@ void Run(){
 		PrintSingleInfected();
 		//if(iTime%200==0) 
 		output(out);
-		if(iTime==2500){
+		if(iTime==3000){
 			//prints two versions of the tree
 			//ofstream tree1("tree1");
 			//top->print(tree1);
@@ -275,8 +285,15 @@ void Run(){
 			
 			cerr<< "tree printed " <<endl;
 			ofstream tree("tree");
-			top->print(tree, 0, 0.5);
+			ofstream tree2("tree2");
+			//top->cal_print_spaces();
+			COffset offset=top->cal_offsets();
+			tree<<offset.width()<<"  "<<offset.bottom<<"   "<<offset.top<<endl;
+			top->print(tree, -0, 0.0);
+			top->print2(tree2, -0, 0.0);
 			tree.close();
+			tree2.close();
+			exit(0);
 			//testing if the file was read correctly
 			//vector <CStrain*> temp;
 			//ifstream treein("tree");
@@ -296,8 +313,9 @@ void finish(){
 	delete top;
 }
 
-int main(){
+int main(int argc, char **argv){
 
+	if(argc>1)seed=atoi(argv[1]);
 	signal(30,SignalControlReport);
 	signal(31,SignalControlReport);
 	signal(32,SignalControlReport);
