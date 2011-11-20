@@ -110,9 +110,9 @@ CStrain* CStrain::father(){
 //....
 //sumN[rmax] is the sum of N's of all strains at distance rmax
 void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
-	sumN[distance]+=N;
 	if(distance>max_dist)max_dist=distance;
-	if(distance==rmax) return;
+	if(distance>=rmax) return;
+	sumN[distance]+=N;
 
 	
 	if(father()!=NULL and father()!=exclude) 
@@ -127,9 +127,9 @@ void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
 }
 
 void CStrain::get_infected2(double *sumN, size_t distance, CStrain *exclude){
-	sumN[distance]+=N;
 	if(distance>max_dist)max_dist=distance;
-	if(distance==rmax) return;
+	if(distance>=rmax) return;
+	sumN[distance]+=N;
 
 	
 	if(links.at(0).head!=NULL and links.at(0).head!=exclude) 
@@ -390,7 +390,7 @@ void CStrain::print2(ostream &out, double x, double y){
 }
 void CStrain::print(ostream &out, double x, double y){
 	static double dL=0.02;
-	out<<"c "<<x<<"  "<<y<<" 0.005"<<"  "<<color<<endl;
+	out<<"c "<<x<<"  "<<y<<"  "<<base_print_width/4<<"  "<<color<<endl;
 	this->x=x;this->y=y;
 
 	if(neighbours.size()<2) return;

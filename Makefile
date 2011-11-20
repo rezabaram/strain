@@ -10,16 +10,19 @@ run:	strain
 	./strain $(SEED)
 
 ps:	
-	head -1 tree > _sorted
-	gawk "{if(NR!=1) print $0}" tree | sort -r >> _sorted
-	./tree2ps _sorted > test.ps
+	head -1 $(FILE) > _sorted
+	gawk "{if(NR!=1) print $0}" $(FILE) | sort -r >> _sorted
+	./genps _sorted > $(FILE).ps
 	rm _sorted
-
-	ps2eps -f test.ps
-	gv test.eps
+	ps2eps -f $(FILE).ps
+	gv $(FILE).eps
 
 bak:
-	mv -f single0* out logtime tree trash/
+	rm -rf trash/*
+	mv -f tree0* single0* out logtime tree trash/
+
+clean:
+	rm -f tree0* single0* out logtime tree 
 
 	
 #1321731977

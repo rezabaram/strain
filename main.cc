@@ -258,6 +258,40 @@ void PrintSingleInfected(){
 	}
 }
 
+void output_graphic_tree(){
+	static int outcount=0;
+	outcount++;
+	//prints two versions of the tree
+	//ofstream tree1("tree1");
+	//top->print(tree1);
+	//tree1.close();
+
+	//ofstream tree("tree");
+	//SaveState(tree, allstrains);
+	//tree.close();
+	
+	//cerr<< "tree printed " <<endl;
+	ofstream tree(("tree"+stringify(outcount,5, '0')).c_str());
+//	ofstream tree2("tree2");
+	//top->cal_print_spaces();
+	COffset offset=top->cal_offsets();
+	tree<<offset.width()<<"  "<<offset.bottom<<"   "<<offset.top<<endl;
+	top->print(tree, -0, 0.0);
+	top->print_bridges(tree);
+	//top->print2(tree2, -0, 0.0);
+	tree.close();
+	//tree2.close();
+	//exit(0); to go out
+	//testing if the file was read correctly
+	//vector <CStrain*> temp;
+	//ifstream treein("tree");
+	//ReadState(treein, temp);
+	//treein.close();
+
+	//ofstream tree2("tree2");
+	//SaveState(tree2, temp);
+	//tree2.close();
+}
 void Run(){
 	ofstream out("out");
 	ofstream outdiv("diversity");
@@ -289,13 +323,7 @@ void Run(){
 		t=iTime*dt;
 		Update();
 		if(strains.size()==0) {
-			ofstream tree("tree");
-			//top->cal_print_spaces();
-			COffset offset=top->cal_offsets();
-			tree<<offset.width()<<"  "<<offset.bottom<<"   "<<offset.top<<endl;
-			top->print(tree, -0, 0.0);
-			top->print_bridges(tree);
-			tree.close();
+			output_graphic_tree();
 			break;
 		}
 	
@@ -304,38 +332,7 @@ void Run(){
 		output(out);
 		if(iTime%(inf_period*6)==0) print_diversity(outdiv);
 
-		if(iTime==3000){
-			//prints two versions of the tree
-			//ofstream tree1("tree1");
-			//top->print(tree1);
-			//tree1.close();
-
-			//ofstream tree("tree");
-			//SaveState(tree, allstrains);
-			//tree.close();
-			
-			cerr<< "tree printed " <<endl;
-			ofstream tree("tree");
-			ofstream tree2("tree2");
-			//top->cal_print_spaces();
-			COffset offset=top->cal_offsets();
-			tree<<offset.width()<<"  "<<offset.bottom<<"   "<<offset.top<<endl;
-			top->print(tree, -0, 0.0);
-			top->print_bridges(tree);
-			top->print2(tree2, -0, 0.0);
-			tree.close();
-			tree2.close();
-			//exit(0); to go out
-			//testing if the file was read correctly
-			//vector <CStrain*> temp;
-			//ifstream treein("tree");
-			//ReadState(treein, temp);
-			//treein.close();
-
-			//ofstream tree2("tree2");
-			//SaveState(tree2, temp);
-			//tree2.close();
-		}
+		if(iTime%1000==0) output_graphic_tree();
 	}
 	
 }
