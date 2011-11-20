@@ -14,7 +14,4 @@ ps:	tree
 	gv test.eps
 
 bak:
-	mv -f single0* out logtime tree trash/
-
-	
-#1321731977
+	mv -f single0* out logtime tree diversity trash/

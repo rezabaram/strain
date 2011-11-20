@@ -26,6 +26,7 @@ class CStrain{
 	CLink<CStrain> to_be_bridged(int distance);
 	void make_bridges();
 	void get_diversity(double &div, size_t distance=0, CStrain *exclude=NULL);
+	void get_diversity2(double &div, size_t distance=0, CStrain *exclude=NULL);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
 	void print_bridges(ostream &out);
@@ -140,6 +141,7 @@ void CStrain::get_infected2(double *sumN, size_t distance, CStrain *exclude){
 	}
 	return;
 }
+
 CLink<CStrain> CStrain::to_be_bridged(int distance ){
 	
 	int alive_branches=0, branch=-1;;
@@ -152,9 +154,12 @@ CLink<CStrain> CStrain::to_be_bridged(int distance ){
 	if(alive_branches==1 and this->dead){
 		return links.at(branch).head->to_be_bridged(distance+links.at(branch).length );
 	}
-	else{
-		return CLink<CStrain>(this,distance);
+	if(alive_branches==0 and dead){
+		 is_leaf=true;
+		  if(links.size()>1) color=2;//color for dead branch
 	}
+	return CLink<CStrain>(this,distance);
+	
 }
 
 //stopped here, wrong bridges 
@@ -184,6 +189,16 @@ void CStrain::get_diversity(double &diversity, size_t distance, CStrain *exclude
 	return;
 }
 
+void CStrain::get_diversity2(double &diversity, size_t distance, CStrain *exclude){
+	diversity+=N*distance;
+
+	for(size_t i=0; i<links.size(); i++){
+		if(links.at(i).head==NULL) continue;
+		if(links.at(i).head==exclude) continue;
+		links.at(i).head->get_diversity2(diversity, distance+links.at(i).length, this);
+	}
+	return;
+}
 
 //Returns the number of alive neighbours of the strain
 int CStrain::count_neigh(){
@@ -238,9 +253,9 @@ void CStrain::trim(){
 		}
 	}
 	if(alive_branches==0 and dead){
-		 is_leaf=true;
-		  if(neighbours.size()>1) color=2;//color for dead branch
-		}
+		is_leaf=true;
+		if(neighbours.size()>1) color=2;//color for dead branch
+	}
 
 }
 

@@ -35,7 +35,7 @@ double t;
 unsigned int iTime=0;
 //Cross immunity matrix
 double *chi;
-const unsigned int Nfiles=1000;
+const unsigned int Nfiles=1;
 
 void define_cross_im(){
 
@@ -202,14 +202,16 @@ void Update_Immunes(){
 
 double Diversity(){
 	list<CStrain*>::iterator it;
-	double diversity=0;
+	double diversity=0.;
+	double sumAllN=0.;
 	for(it=strains.begin(); it!=strains.end(); it++){
 		double div=0;
-		(*it)->get_diversity(div,0,(*it));
+		(*it)->get_diversity2(div,0,(*it));
 		//(*it)->get_diversity(div);
-		diversity+=(*it)->N*div/Npop;
+		diversity+=(*it)->N*div;
+		sumAllN+=(*it)->N;
 	}
-	diversity=diversity/2/Npop;
+	diversity=diversity/2/(sumAllN*sumAllN);
 	return diversity;
 }
 
@@ -219,23 +221,30 @@ void Update(){
 	Mutations();
 	Update_Immunes();
 	//trims the dead leaves
-	if(iTime%10==0) top->trim();
-	if(iTime%10) top->make_bridges();
+	//if(iTime%10==0) top->trim();
+	if(iTime%5==0) top->make_bridges();
 }
 
 
 void output(ostream &out){
-	double sumAllI=0.;
+
+	double sumAllN=0.;
 
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		sumAllI+=(*it)->N;
+		sumAllN+=(*it)->N;	
 	}
 	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
 	out << CStrain::max_dist<<"  ";
-	//out << Diversity() <<"  ";
-	out << sumAllI <<"   ";
-	out<< endl;
+	//out << Diversity() <<"   ";
+	out << sumAllN <<"   ";
+	out << endl;
+}
+
+void print_diversity(ostream &out){
+	out << t <<"    ";
+	out << Diversity() <<"   ";
+	out << endl;
 }
 
 ofstream singleouts[Nfiles];	
@@ -251,6 +260,7 @@ void PrintSingleInfected(){
 
 void Run(){
 	ofstream out("out");
+	ofstream outdiv("diversity");
 	int s=0;
 	for(size_t i=0; i<Nfiles; i++){
 		string name ="single"+stringify(i,5,'0');
@@ -259,7 +269,7 @@ void Run(){
 
 	unsigned int iTimeMax=tMax/dt;
 	for(iTime=1; iTime<=iTimeMax; iTime++){
-
+		CStrain::max_dist=0;
 		if(bSignal==0) {
         		mut_rate*=0.95;
 			//mut_rate-=0.0001;
@@ -292,7 +302,9 @@ void Run(){
 		PrintSingleInfected();
 		//if(iTime%200==0) 
 		output(out);
-		if(iTime==3000000){
+		if(iTime%(inf_period*6)==0) print_diversity(outdiv);
+
+		if(iTime==3000){
 			//prints two versions of the tree
 			//ofstream tree1("tree1");
 			//top->print(tree1);
@@ -313,7 +325,7 @@ void Run(){
 			top->print2(tree2, -0, 0.0);
 			tree.close();
 			tree2.close();
-			exit(0);
+			//exit(0); to go out
 			//testing if the file was read correctly
 			//vector <CStrain*> temp;
 			//ifstream treein("tree");
