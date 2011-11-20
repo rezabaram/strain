@@ -18,6 +18,10 @@ std::tr1::uniform_real<double> unif(0, 1);
 ofstream logtime("logtime");
 CTimer timer;
 
+CConfig config("config");
+
+rmax=config.get_param<size_t>("rmax");
+
 using namespace std;
 
 //To to be used for assigning ID's
@@ -87,7 +91,7 @@ void define_cross_im(){
 	double m=14./5.;
 	double y0=0.3;
 	double x0=-4.;
-	for(int i=0; i<=rmax; i++){
+	for(size_t i=0; i<=rmax; i++){
 		chi[i]=m/(i-x0)+y0;
 	}
 	
@@ -184,7 +188,7 @@ void Update_Immunes(){
 	for(it=strains.begin(); it!=strains.end(); it++){
 		for(size_t i=0; i<rmax+1; i++) sumN[i]=0; 
 
-		(*it)->get_infected(sumN);
+		(*it)->get_infected2(sumN);
 
 		for(size_t i=0; i<rmax+1; i++) (*it)->M[i]+=nu*sumN[i]*dt; 
 	}
@@ -210,7 +214,8 @@ void Update(){
 	Mutations();
 	Update_Immunes();
 	//trims the dead leaves
-	if(iTime%100==0) top->trim();
+	if(iTime%10==0) top->trim();
+	if(iTime%10) top->make_bridges();
 }
 
 
@@ -268,12 +273,21 @@ void Run(){
 		logtime<<timer.read()<<"   "<<t<<endl;
 		t=iTime*dt;
 		Update();
-		if(strains.size()==0) break;
+		if(strains.size()==0) {
+			ofstream tree("tree");
+			//top->cal_print_spaces();
+			COffset offset=top->cal_offsets();
+			tree<<offset.width()<<"  "<<offset.bottom<<"   "<<offset.top<<endl;
+			top->print(tree, -0, 0.0);
+			top->print_bridges(tree);
+			tree.close();
+			break;
+		}
 	
 		PrintSingleInfected();
 		//if(iTime%200==0) 
 		output(out);
-		if(iTime==3000){
+		if(iTime==3000000){
 			//prints two versions of the tree
 			//ofstream tree1("tree1");
 			//top->print(tree1);
@@ -290,6 +304,7 @@ void Run(){
 			COffset offset=top->cal_offsets();
 			tree<<offset.width()<<"  "<<offset.bottom<<"   "<<offset.top<<endl;
 			top->print(tree, -0, 0.0);
+			top->print_bridges(tree);
 			top->print2(tree2, -0, 0.0);
 			tree.close();
 			tree2.close();

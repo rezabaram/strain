@@ -48,4 +48,14 @@ class COffset
  	private:
 	};
 
+template<class T>
+class CLink
+	{
+	public:
+	CLink(T *_h, int d=1):head(_h),length(d){ }
+	int length;
+	T *head;
+ 	private:
+	};
+
 #endif /* TOOLS_H */

@@ -20,10 +20,15 @@ class CStrain{
 	void trim();
 	CStrain *father();
 	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
+	void add_link(CStrain *ps, int d){links.push_back(CLink<CStrain>(ps, d));};
 	void get_infected(double *sumN, size_t distance=0, CStrain *exclude=NULL);
+	void get_infected2(double *sumN, size_t distance=0, CStrain *exclude=NULL);
+	CLink<CStrain> to_be_bridged(int distance);
+	void make_bridges();
 	void get_diversity(double &div, size_t distance=0, CStrain *exclude=NULL);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
+	void print_bridges(ostream &out);
 	void print(ostream &out, double x, double y);
 	void print2(ostream &out, double x, double y);
 	double cal_print_widths();
@@ -37,10 +42,12 @@ class CStrain{
 	double *M;
 	static unsigned int max_dist;
 	std::vector<CStrain*> neighbours;
+	std::vector<CLink<CStrain> > links;
 	static unsigned stotal;
 	COffset offset;
 	double print_width;
 	int color;
+	double x, y;
 	private:
 	static const double base_print_width=0.015;
 };
@@ -61,8 +68,10 @@ CStrain::CStrain(int i, CStrain *f){
 	fitness=0.0;
 	if(f!=NULL){
 		f->add_neighbour(this);
+		f->add_link(this,1);
 	}
 	neighbours.push_back(f);
+	add_link(f,1);
 
 	dead=true;
 	is_leaf=true;
@@ -113,6 +122,55 @@ void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
 		neighbours.at(i)->get_infected(sumN, distance+1, this);
 	}
 	return;
+}
+
+void CStrain::get_infected2(double *sumN, size_t distance, CStrain *exclude){
+	sumN[distance]+=N;
+	if(distance>max_dist)max_dist=distance;
+	if(distance==rmax) return;
+
+	
+	if(links.at(0).head!=NULL and links.at(0).head!=exclude) 
+		links.at(0).head->get_infected2(sumN, distance+links.at(0).length, this);
+
+	if(is_leaf) return;
+	for(size_t i=1; i<links.size(); i++){
+		if(links.at(i).head==exclude) continue;
+		links.at(i).head->get_infected2(sumN, distance+links.at(i).length, this);
+	}
+	return;
+}
+CLink<CStrain> CStrain::to_be_bridged(int distance ){
+	
+	int alive_branches=0, branch=-1;;
+	for(size_t i=1; i<links.size(); i++){
+		if(!(links.at(i).head->is_leaf) or !(links.at(i).head->dead)){
+			alive_branches++;
+			branch=i;
+		}
+	}
+	if(alive_branches==1 and this->dead){
+		return links.at(branch).head->to_be_bridged(distance+links.at(branch).length );
+	}
+	else{
+		return CLink<CStrain>(this,distance);
+	}
+}
+
+//stopped here, wrong bridges 
+void CStrain::make_bridges(){
+
+	int distance=0;
+	for(size_t i=1; i<links.size(); i++){
+		CLink<CStrain> l=links.at(i).head->to_be_bridged(distance+links.at(i).length);
+		if(l.head!=NULL and l.head!=links.at(i).head) {
+			links.at(i).head=l.head;
+			links.at(i).length=l.length;
+			l.head->links.at(0).head=this;
+			l.head->links.at(0).length=l.length;
+		}
+		l.head->make_bridges();
+	}
 }
 
 void CStrain::get_diversity(double &diversity, size_t distance, CStrain *exclude){
@@ -302,6 +360,8 @@ void CStrain::print2(ostream &out, double x, double y){
 void CStrain::print(ostream &out, double x, double y){
 	static double dL=0.02;
 	out<<"c "<<x<<"  "<<y<<" 0.005"<<"  "<<color<<endl;
+	this->x=x;this->y=y;
+
 	if(neighbours.size()<2) return;
 	size_t nn=neighbours.size()-1.;
 	size_t ind[neighbours.size()];
@@ -325,11 +385,14 @@ void CStrain::print(ostream &out, double x, double y){
 		if(i<nn)y-=neighbours.at(ind[i+1])->offset.top;
 	}
 }
-/*
-	size_t ind[neighbours.size()];
-	mysort(neighbours,ind, neighbours.size());
-*/
+void CStrain::print_bridges(ostream &out){
 
+	for(size_t i=1; i<links.size(); i++){
+		CLink<CStrain> &l=links.at(i);
+		if(l.length>1)out<<"l "<<x<<"  "<<y<<"  "<<l.head->x<<"   "<<l.head->y<<endl;
+		l.head->print_bridges(out);
+		}
+}
 COffset &CStrain::cal_offsets(){
 	offset.top=0.0;
 	offset.bottom=0.0;
