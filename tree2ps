@@ -143,18 +143,35 @@ setfont
     /^\s*(\S*)\s*(\S*)\s*(\S*)\s*(\S*)\s*(\S*)\s*(\S*)\s*(\S*)\s*(\S*)\s*(\S*)\s*(\S*)/; 
   if($line_counter eq 0){
   $hight=$1;
-  $scale=28/$hight*$scale0;
   $line_counter=1;
-  $xoffset=-.2;
-  $yoffset=$2*$scale-3;
+  #$xoffset=-.2;
+  #$yoffset=$2*$scale-3;
+  $xoffset=0;
+  $xoffset=0;
+  $scale=10./$hight;
+  #$scale=28/$hight*$scale0;
   }
-    if($1 eq "l"){
+    if($1 eq "l" or $1 eq "a"){
 	    $x=$xoffset+$scale*$2;
 	    $y=$yoffset+$scale*$3;
 	    $x2=$xoffset+$scale*$4;
 	    $y2=$yoffset+$scale*$5;
+	    $rcolor=0.5;
+	    $gcolor=.5;
+	    $bcolor=.5;
+	     print "gsave ";
+    	    if($1 eq "a"){
+		$dashw=0.1/$hight;
+		print "[",$dashw,"] 0 setdash\n";
+		    $rcolor=0.2;
+		    $gcolor=.2;
+		    $bcolor=.2;
+		}
+	     print " 0.001 setlinewidth\n";
+	     printf("%f %f %f setrgbcolor\n", $rcolor, $gcolor, $bcolor);
 	     printf("newpath %f %f moveto\n", $x, $y);
 	     printf("%f %f lineto stroke\n", $x2, $y2);
+	     print "grestore\n";
 		}
     if($1 eq "c" ){
 	if($5 eq 1){

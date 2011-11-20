@@ -18,6 +18,7 @@ class CStrain{
 	int count_neigh();
 	void die();
 	void trim();
+	void trim_links();
 	CStrain *father();
 	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
 	void add_link(CStrain *ps, int d){links.push_back(CLink<CStrain>(ps, d));};
@@ -50,7 +51,7 @@ class CStrain{
 	int color;
 	double x, y;
 	private:
-	static const double base_print_width=0.015;
+	static const double base_print_width=0.01;
 };
 unsigned int CStrain::stotal=0;
 
@@ -241,6 +242,21 @@ void CStrain::die(){
 	M=NULL;
 }
 
+void CStrain::trim_links(){
+       
+       int alive_branches=0;
+       for(size_t i=1; i<links.size(); i++){
+               if(!(links.at(i).head->is_leaf) or !(links.at(i).head->dead)){
+                       links.at(i).head->trim_links();
+                       alive_branches++;
+               }
+       }
+       if(alive_branches==0 and dead){
+                is_leaf=true;
+                 if(links.size()>1) color=2;//color for dead branch
+       }
+}
+
 void CStrain::trim(){
 	if(is_leaf)return;
 	std::vector<CStrain*>::iterator it, it0;
@@ -348,7 +364,7 @@ void CStrain::read_node(stringsream &ss){
 */
 void CStrain::print2(ostream &out, double x, double y){
 	static double dL=0.02;
-	out<<"c "<<x<<"  "<<y<<" 0.005"<<"  "<<dead<<endl;
+	out<<"c "<<x<<"  "<<y<<"  "<<base_print_width/4<<"  "<<color<<endl;
 	size_t nn=neighbours.size()-1.;
 	if(nn<1) return;
 	out<<"l "<<x<<"  "<<y<<"  ";
@@ -404,7 +420,7 @@ void CStrain::print_bridges(ostream &out){
 
 	for(size_t i=1; i<links.size(); i++){
 		CLink<CStrain> &l=links.at(i);
-		if(l.length>1)out<<"l "<<x<<"  "<<y<<"  "<<l.head->x<<"   "<<l.head->y<<endl;
+		if(l.length>1)out<<"a "<<x<<"  "<<y<<"  "<<l.head->x<<"   "<<l.head->y<<endl;
 		l.head->print_bridges(out);
 		}
 }
