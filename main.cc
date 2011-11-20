@@ -11,6 +11,7 @@
 #include"parameters.h"
 #include"io.h"
 #include"signal.h"
+#include"config.h"
 int seed=time(0);
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
@@ -20,7 +21,6 @@ CTimer timer;
 
 CConfig config("config");
 
-rmax=config.get_param<size_t>("rmax");
 
 using namespace std;
 
@@ -88,13 +88,17 @@ void define_cross_im(){
 	} 
 */
 
+
+// hyperbola
+ 
 	double m=14./5.;
-	double y0=0.3;
+	double y0=0.3; // asymptote
 	double x0=-4.;
-	for(size_t i=0; i<=rmax; i++){
-		chi[i]=m/(i-x0)+y0;
+
+	for(size_t d=0; d<=rmax; d++){
+		chi[d] = m/(d-x0) + y0;
+		//cout << chi[d] << "    ";
 	}
-	
 	//cout << endl;
 
 }
@@ -105,6 +109,7 @@ void Initial_Conditions(){
 	cerr<< "Seed: "<<seed <<endl;
 	eng.seed(seed);
 	//eng.seed(10);
+	rmax=config.get_param<size_t>("rmax");
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
