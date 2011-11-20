@@ -84,13 +84,14 @@ void define_cross_im(){
 	//cout << endl;
 */
 
-	double a=2.;
-	double asymp=0.3;
+// hyperbola
+ 
+	double m=14./5.;
+	double y0=0.3; // asymptote
+	double x0=-4.;
 
-	chi[0]=1.;
-
-	for(int d=1; d<=rmax; d++){
-		chi[d] = a/d + asymp;
+	for(int d=0; d<=rmax; d++){
+		chi[d] = m/(d-x0) + y0;
 		//cout << chi[d] << "    ";
 	}
 	//cout << endl;
