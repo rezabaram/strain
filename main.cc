@@ -126,7 +126,7 @@ void Initial_Conditions(){
 void Mutate(CStrain *pfather){
 	CStrain *ps = new CStrain(stotal,pfather);
 	pfather->N--;
-	if(pfather->N<1) pfather->die();
+//	if(pfather->N<1) pfather->die(); 
 
 	strains.push_back(ps);
 	allstrains.push_back(ps);
@@ -145,17 +145,6 @@ void Immune_Selection(){
 	}
 }
 
-//removes an element from the list and returns 
-//the iterator to the PREVIOUS element
-list<CStrain*>::iterator remove(list<CStrain*>::iterator &it){
-		list<CStrain*>::iterator it0;
-		//make sure we dont jump over a strain while erasing 
-		(*it)->die();
-		it0=it;
-		it--;
-		strains.erase(it0);
-		return it;
-}
 
 void Genetic_Drift(){
 	//applying to all strains
@@ -166,24 +155,32 @@ void Genetic_Drift(){
 		std::tr1::poisson_distribution<double> poisson((*it)->N);
 		double rnd = poisson(eng);
 
-		if(rnd<1) {
-			it=remove(it);
+		if(rnd<2) {
+			(*it)->die();
+			//this also sets "it" to next value
+			it=strains.erase(it);
 		}
 		else{
 			(*it)->N=rnd;
+			it++;
 		}
-	it++;
 	}
 
 }
 
 void Mutations(){
-	list<CStrain*>::iterator it;
-	for(it=strains.begin(); it!=strains.end(); it++){
+	list<CStrain*>::iterator it=strains.begin();
+	while(it!=strains.end()) {
 		if(unif(eng)<=mut_rate){
 			Mutate(*it);
-			if((*it)->N<1) remove(it);
-			}
+			if((*it)->N<1) {
+				(*it)->die();
+				//this also sets "it" to next value
+				it=strains.erase(it);
+				continue;
+				}
+		}
+		it++;
 	}
 }
 
@@ -221,7 +218,7 @@ void Update(){
 	Mutations();
 	Update_Immunes();
 	//trims the dead leaves
-	//if(iTime%10==0) top->trim();
+	if(iTime%10==0) top->trim();
 	if(iTime%5==0) top->make_bridges();
 }
 

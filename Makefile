@@ -15,11 +15,12 @@ ps:
 	./genps _sorted > $(FILE).ps
 	rm _sorted
 	ps2eps -f $(FILE).ps
+	epstopdf  $(FILE).eps
 	gv $(FILE).eps
 
 bak:
 	rm -rf trash/*
-	mv -f tree0* single0* out logtime tree trash/
+	mv -f tree0* single0* out logtime trash/
 
 clean:
 	rm -f tree0* single0* out logtime tree 

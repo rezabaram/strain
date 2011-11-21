@@ -95,7 +95,7 @@ void CStrain::SetAlive(){
 
 //Cleans the allocated memory if not yet cleaned 
 CStrain::~CStrain(){
-	if( M!=NULL) delete[] M;
+	if(M!=NULL) delete[] M; 
 	stotal--;
 }
 
@@ -110,8 +110,8 @@ CStrain* CStrain::father(){
 //....
 //sumN[rmax] is the sum of N's of all strains at distance rmax
 void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
-	if(distance>max_dist)max_dist=distance;
 	if(distance>=rmax) return;
+	if(distance>max_dist)max_dist=distance;
 	sumN[distance]+=N;
 
 	
@@ -127,9 +127,9 @@ void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
 }
 
 void CStrain::get_infected2(double *sumN, size_t distance, CStrain *exclude){
-	if(distance>max_dist)max_dist=distance;
-	if(distance>=rmax) return;
 	sumN[distance]+=N;
+	if(distance>=rmax) return;
+	if(distance>max_dist)max_dist=distance;
 
 	
 	if(links.at(0).head!=NULL and links.at(0).head!=exclude) 
@@ -235,11 +235,12 @@ double CStrain::WeightedSumM(double *chi){
 // To same some memory we clean M of 
 // dead strains
 void CStrain::die(){
+	assert(!dead);
 	N=0.0;
 	dead=true;
 	color=1;
 	delete[] M;
-	M=NULL;
+	M=NULL; 
 }
 
 void CStrain::trim_links(){
