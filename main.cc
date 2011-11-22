@@ -40,59 +40,36 @@ const unsigned int Nfiles=1;
 void define_cross_im(){
 
 	chi=new double[rmax+1];
-/*
-	double a=1;
-	for(int i=0; i<=rmax; i++){
-		chi[i]=a;
-		a-=1.0/(rmax+1);
-		//cout << chi[i] << "    ";
-	}
-	//cout << endl;
-*/
 
-// step function with rmax=10;
-/*
-	double a=1.;
 
-	for(int d=0; d<=rmax; d++){
+// step function
+
+/*
+	double a=0.85;
+
+	for(size_t d=0; d<=rmax; d++){
 		chi[d]=a;
-	}	
+	}
 */
 
-/*
-	double A=0.; //lower asymptote
-	double K=1.; //upper asymptote
-	double B=2.5; 
-	double Q=1.;
-	double d0=10.;
-*/
+// generalized logistic function
 
 /*
-	double A=0.; //lower asymptote
+	double A=3./10.; //lower asymptote
 	double K=1.; //upper asymptote
-	double B=0.5; 
-	double Q=1.;
-	double d0=10.;
-*/
-
-/*
-	double A=0.3; //lower asymptote
-	double K=1.; //upper asymptote
-	double B=0.5; 
-	double Q=1.;
+	double B=1./2.; 
+	double Q=5./2.;
 	double d0=10.;
 
 	for(size_t d=0; d<=rmax; d++){
-		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));
-		//cout << chi[d] << "    ";	
-	} 
+		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));	
+	}
 */
 
-
 // hyperbola
- 
+
 	double m=14./5.;
-	double y0=0.3; // asymptote
+	double y0=3./10.; // asymptote
 	double x0=-4.;
 
 	for(size_t d=0; d<=rmax; d++){
@@ -218,8 +195,8 @@ void Update(){
 	Mutations();
 	Update_Immunes();
 	//trims the dead leaves
-	if(iTime%10==0) top->trim();
-	if(iTime%5==0) top->make_bridges();
+	//if(iTime%10==0) top->trim(); not necessary!
+	if(iTime%inf_period==0) top->make_bridges();
 }
 
 
@@ -229,6 +206,7 @@ void output(ostream &out){
 
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
+		assert((*it)->N>0);
 		sumAllN+=(*it)->N;	
 	}
 	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
@@ -325,7 +303,7 @@ void Run(){
 		}
 	
 		PrintSingleInfected();
-		//if(iTime%200==0) 
+		//if(iTime%200==0)
 		output(out);
 		if(iTime%(inf_period*6)==0) print_diversity(outdiv);
 

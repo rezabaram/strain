@@ -20,7 +20,7 @@ ps:
 
 bak:
 	rm -rf trash/*
-	mv -f tree0* single0* out logtime trash/
+	mv -f tree0* single0* out logtime diversity trash/
 
 clean:
 	rm -f tree0* single0* out logtime tree 

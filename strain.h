@@ -51,7 +51,7 @@ class CStrain{
 	int color;
 	double x, y;
 	private:
-	static const double base_print_width=0.01;
+	static const double base_print_width=0.005;
 };
 unsigned int CStrain::stotal=0;
 
@@ -127,9 +127,9 @@ void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
 }
 
 void CStrain::get_infected2(double *sumN, size_t distance, CStrain *exclude){
-	sumN[distance]+=N;
 	if(distance>=rmax) return;
 	if(distance>max_dist)max_dist=distance;
+	sumN[distance]+=N;
 
 	
 	if(links.at(0).head!=NULL and links.at(0).head!=exclude) 
@@ -162,10 +162,9 @@ CLink<CStrain> CStrain::to_be_bridged(int distance ){
 	return CLink<CStrain>(this,distance);
 	
 }
-
-//stopped here, wrong bridges 
+ 
 void CStrain::make_bridges(){
-
+	assert(links.size()==neihbours.size());
 	int distance=0;
 	for(size_t i=1; i<links.size(); i++){
 		CLink<CStrain> l=links.at(i).head->to_be_bridged(distance+links.at(i).length);
@@ -389,6 +388,7 @@ void CStrain::print2(ostream &out, double x, double y){
 		if(i<nn)y-=neighbours.at(i+1)->offset.top;
 	}
 }
+
 void CStrain::print(ostream &out, double x, double y){
 	static double dL=0.02;
 	out<<"c "<<x<<"  "<<y<<"  "<<base_print_width/4<<"  "<<color<<endl;
