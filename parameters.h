@@ -5,7 +5,7 @@ size_t rmax=10000;
 const int N0=10;
 const double Npop=1e+6;
 const double R0=1.2;
-const unsigned int inf_period=5;
+const unsigned int inf_period=4;
 const double nu=365.0/(double)inf_period;
 const int L=120; // 60 epitope codons in the HA1 domain
 const double mu=5.8*1e-3; // "ideal" mut_rate = L*mu/365 = 0.001906849;
