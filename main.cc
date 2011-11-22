@@ -54,30 +54,31 @@ void define_cross_im(){
 
 // generalized logistic function
 
-/*
-	double A=3./10.; //lower asymptote
+
+	double A=5./100.; //lower asymptote
 	double K=1.; //upper asymptote
-	double B=1./2.; 
-	double Q=5./2.;
+	double B=5./2.; 
+	double Q=10./9.;
 	double d0=10.;
 
 	for(size_t d=0; d<=rmax; d++){
-		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));	
+		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));
+		//cout << chi[d] << "    ";
 	}
-*/
+
 
 // hyperbola
-
-	double m=14./5.;
-	double y0=3./10.; // asymptote
-	double x0=-4.;
+/*
+	double m=171./20.;
+	double y0=5./100.; // asymptote
+	double x0=-9.;
 
 	for(size_t d=0; d<=rmax; d++){
 		chi[d] = m/(d-x0) + y0;
 		//cout << chi[d] << "    ";
 	}
 	//cout << endl;
-
+*/
 }
 
 
@@ -280,14 +281,14 @@ void Run(){
 	for(iTime=1; iTime<=iTimeMax; iTime++){
 		CStrain::max_dist=0;
 		if(bSignal==0) {
-        		mut_rate*=0.95;
-			//mut_rate-=0.0001;
+        		//mut_rate*=0.95;
+			mut_rate-=0.0001;
                   	bSignal=-1;
                        	cerr<< "New Mutation rate:" << mut_rate <<"   "<< "Time:" << iTime*dt << endl;
                 }
                	if(bSignal==1) {
-			mut_rate*=1.15;
-           		//mut_rate+=0.0001;
+			//mut_rate*=1.15;
+           		mut_rate+=0.0001;
                 	bSignal=-1;
                        	cerr<< "New Mutation rate:" << mut_rate <<"   "<< "Time:" << iTime*dt << endl;
                 }

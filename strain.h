@@ -164,7 +164,7 @@ CLink<CStrain> CStrain::to_be_bridged(int distance ){
 }
  
 void CStrain::make_bridges(){
-	assert(links.size()==neihbours.size());
+	assert(links.size()==neighbours.size());
 	int distance=0;
 	for(size_t i=1; i<links.size(); i++){
 		CLink<CStrain> l=links.at(i).head->to_be_bridged(distance+links.at(i).length);
@@ -243,7 +243,7 @@ void CStrain::die(){
 }
 
 void CStrain::trim_links(){
-       
+
        int alive_branches=0;
        for(size_t i=1; i<links.size(); i++){
                if(!(links.at(i).head->is_leaf) or !(links.at(i).head->dead)){
