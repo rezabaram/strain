@@ -15,7 +15,7 @@ const double beta=R0*nu;
 const double f0=nu*(R0-1.); // beta-nu
 const double beta0=beta/(Npop*(beta-nu));
 const double dt=1./365.;
-const double tMax=1000.;
+const double tMax=200.;
 
 // ./plot.sh [0:10] 1:2 single00*
 

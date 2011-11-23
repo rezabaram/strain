@@ -101,17 +101,6 @@ void Initial_Conditions(){
 
 //create a new strain through mutation
 //and add to the list
-void Mutate(CStrain *pfather){
-	CStrain *ps = new CStrain(stotal,pfather);
-	pfather->N--;
-//	if(pfather->N<1) pfather->die(); 
-
-	strains.push_back(ps);
-	allstrains.push_back(ps);
-
-	stotal++;
-}
-
 
 void Immune_Selection(){
 	list<CStrain*>::iterator it;
@@ -133,7 +122,9 @@ void Genetic_Drift(){
 		std::tr1::poisson_distribution<double> poisson((*it)->N);
 		double rnd = poisson(eng);
 
-		if(rnd<2) {
+		//cout << rnd << "    " << endl;		
+
+		if(rnd<1) {
 			(*it)->die();
 			//this also sets "it" to next value
 			it=strains.erase(it);
@@ -146,24 +137,49 @@ void Genetic_Drift(){
 
 }
 
-void Mutations(){
-    list<CStrain*>::iterator it=strains.begin();
-    while(it!=strains.end()) {
-        int nn=(*it)->N;
-        for(int i=0; i<nn; i++){
-            if(unif(eng)<=mut_rate){
-                Mutate(*it);
-            }
-            if((*it)->N<1) {
-                (*it)->die();
-                //this also sets "it" to next value
-                it=strains.erase(it);
-                continue;
-                }
-        }
-        it++;
-    }
+void Mutate(CStrain *pfather){
+	CStrain *ps = new CStrain(stotal,pfather);
+
+	ps->M[0]=0.;
+
+	for(size_t i=1;i<=rmax;i++){
+		ps->M[i]=pfather->M[i-1];
+	}
+
+	pfather->N--;
+
+	strains.push_back(ps);
+	allstrains.push_back(ps);
+
+	stotal++;
 }
+
+void Mutations(){
+	list<CStrain*>::iterator it=strains.begin();
+	while(it!=strains.end()) {
+		int nn=(*it)->N;
+		for(int i=0; i<nn; i++){
+			if(unif(eng)<=mut_rate){
+                		Mutate(*it);
+            		}
+            		if((*it)->N<1) {
+                		(*it)->die();
+                		//this also sets "it" to next value
+                		it=strains.erase(it);
+                		continue;
+            		}
+        	}
+        	it++;
+    	}
+}
+
+/*
+	ps->M[0]=0.;
+	for(size_t i=1;i<=rmax;i++){
+		ps->M[i]=pfather->M[i-1];
+	}
+*/
+
 
 void Update_Immunes(){
 	double sumN[rmax+1];
@@ -173,7 +189,7 @@ void Update_Immunes(){
 
 		(*it)->get_infected2(sumN);
 
-		for(size_t i=0; i<rmax+1; i++) (*it)->M[i]+=nu*sumN[i]*dt; 
+		for(size_t i=0; i<=rmax; i++) (*it)->M[i]+=nu*sumN[i]*dt;
 	}
 
 }
@@ -226,6 +242,18 @@ void print_diversity(ostream &out){
 	out << endl;
 }
 
+void print_fitness(ostream &out){
+
+	out << t <<"    ";
+
+	list<CStrain*>::iterator it;
+
+	for(it=strains.begin(); it!=strains.end(); it++){
+		out << (*it)->fitness <<"    ";
+	}
+	out << endl;
+}
+
 ofstream singleouts[Nfiles];	
 
 void PrintSingleInfected(){
@@ -271,9 +299,11 @@ void output_graphic_tree(){
 	//SaveState(tree2, temp);
 	//tree2.close();
 }
+
 void Run(){
 	ofstream out("out");
 	ofstream outdiv("diversity");
+	ofstream outfit("fitness");
 	int s=0;
 	for(size_t i=0; i<Nfiles; i++){
 		string name ="single"+stringify(i,5,'0');
@@ -311,7 +341,10 @@ void Run(){
 		output(out);
 		if(iTime%(inf_period*7)==0) print_diversity(outdiv);
 
-		if(iTime%100==0 and iTime*dt <= 4.) output_graphic_tree();
+		//if(iTime%(inf_period*7)==0) 
+		print_fitness(outfit);
+
+		if(iTime%200==0 and t <= 4.) output_graphic_tree();
 	}
 	
 }

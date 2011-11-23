@@ -63,10 +63,10 @@ unsigned int CStrain::max_dist=0;
 //Constructor take an int for ID and the point of the
 //father node
 CStrain::CStrain(int i, CStrain *f){
-	print_width= base_print_width;
+	print_width = base_print_width;
 	stotal++;
-	ID=i; 
-	N=0.0; 
+	ID=i;
+	N=0.0;
 	fitness=0.0;
 	if(f!=NULL){
 		f->add_neighbour(this);
@@ -88,9 +88,9 @@ void CStrain::SetAlive(){
 	dead=false;
 	color=0;
 	M=new double[rmax+1];
-	for(size_t i=0;i<=rmax;i++){
-		M[i]=0.0;
-	}
+	//for(size_t i=0;i<=rmax;i++){
+	//	M[i]=0.0;
+	//}
 }
 
 //Cleans the allocated memory if not yet cleaned 
@@ -132,10 +132,11 @@ void CStrain::get_infected2(double *sumN, size_t distance, CStrain *exclude){
 	sumN[distance]+=N;
 
 	
-	if(links.at(0).head!=NULL and links.at(0).head!=exclude) 
+	if(links.at(0).head!=NULL and links.at(0).head!=exclude)
 		links.at(0).head->get_infected2(sumN, distance+links.at(0).length, this);
 
 	if(is_leaf) return;
+
 	for(size_t i=1; i<links.size(); i++){
 		if(links.at(i).head==exclude) continue;
 		links.at(i).head->get_infected2(sumN, distance+links.at(i).length, this);
@@ -220,9 +221,9 @@ double CStrain::sumM(){
 }
 
 
-//calculates the weighted sum of M, the weight is passed 
-//to the function through the pointer of an array (chi) 
-//with same lenght as M
+//calculates the weighted sum of M, the weight is passed
+//to the function through the pointer of an array (chi)
+//with same length as M
 double CStrain::WeightedSumM(double *chi){
 	double sum=0.0;
 	for(size_t i=0; i<=rmax; i++){
@@ -231,7 +232,7 @@ double CStrain::WeightedSumM(double *chi){
 	return sum;
 }
 
-// To same some memory we clean M of 
+// To save some memory we clean M of 
 // dead strains
 void CStrain::die(){
 	assert(!dead);
@@ -239,7 +240,7 @@ void CStrain::die(){
 	dead=true;
 	color=1;
 	delete[] M;
-	M=NULL; 
+	M=NULL;
 }
 
 void CStrain::trim_links(){
