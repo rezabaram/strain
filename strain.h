@@ -88,9 +88,9 @@ void CStrain::SetAlive(){
 	dead=false;
 	color=0;
 	M=new double[rmax+1];
-	//for(size_t i=0;i<=rmax;i++){
-	//	M[i]=0.0;
-	//}
+	for(size_t i=0;i<=rmax;i++){
+		M[i]=0.0;
+	}
 }
 
 //Cleans the allocated memory if not yet cleaned 

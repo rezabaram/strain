@@ -36,21 +36,23 @@ unsigned int iTime=0;
 //Cross immunity matrix
 double *chi;
 const unsigned int Nfiles=1;
+double mtotal=0.;
+double mutants=0.;
 
 void define_cross_im(){
 
 	chi=new double[rmax+1];
 
 
-// step function
+// constant function
 
-/*
-	double a=1.;
+
+	double a=0.5;
 
 	for(size_t d=0; d<=rmax; d++){
 		chi[d]=a;
 	}
-*/
+
 
 // generalized logistic function
 
@@ -69,16 +71,17 @@ void define_cross_im(){
 
 // hyperbola
 
-	double m=14./5.;
-	double y0=3./10.; // asymptote
-	double x0=-4.;
+/*
+	double m=10.;
+	double y0=0.; // asymptote
+	double x0=-10.;
 
 	for(size_t d=0; d<=rmax; d++){
 		chi[d] = m/(d-x0) + y0;
 		//cout << chi[d] << "    ";
 	}
 	//cout << endl;
-
+*/
 }
 
 
@@ -93,7 +96,7 @@ void Initial_Conditions(){
 	top=new CStrain(stotal,NULL);
 	stotal++;
 	top->N=N0;
-	top->M[0]=100000.;
+	top->M[0]=0.;
 	strains.push_back(top);
 	allstrains.push_back(top);
 	define_cross_im();
@@ -116,24 +119,32 @@ void Immune_Selection(){
 void Genetic_Drift(){
 	//applying to all strains
 	list<CStrain*>::iterator it=strains.begin();
+	list<CStrain*>::iterator itt=strains.begin();
 
 	while(it!=strains.end()) {
 
 		std::tr1::poisson_distribution<double> poisson((*it)->N);
 		double rnd = poisson(eng);
 
-		//cout << rnd << "    " << endl;		
+		//cerr << "random number" << "    " << rnd << "    " << endl;		
 
 		if(rnd<1) {
+			//cerr << "random number smaller than 1" << "    " << rnd << "    " << endl;
 			(*it)->die();
 			//this also sets "it" to next value
 			it=strains.erase(it);
 		}
 		else{
 			(*it)->N=rnd;
+			//cerr << (*it)->N << endl;
 			it++;
 		}
 	}
+
+	
+	//for(it=strains.begin(); it!=strains.end(); it++){
+	//	cerr << (*it)->N << endl;
+	//}
 
 }
 
@@ -156,11 +167,24 @@ void Mutate(CStrain *pfather){
 
 void Mutations(){
 	list<CStrain*>::iterator it=strains.begin();
+	mtotal=0.;
+	mutants=0.;
 	while(it!=strains.end()) {
+
 		int nn=(*it)->N;
+		int mean=1;
+
+		std::tr1::poisson_distribution<double> poisson( mean );
+		double rnd = poisson(eng);
+			
+		mutants+=rnd;
+		//cerr << "number of mutants" << "    " << rnd << "    " << endl;			
+
 		for(int i=0; i<nn; i++){
+	
 			if(unif(eng)<=mut_rate){
                 		Mutate(*it);
+				mtotal++;
             		}
             		if((*it)->N<1) {
                 		(*it)->die();
@@ -172,14 +196,6 @@ void Mutations(){
         	it++;
     	}
 }
-
-/*
-	ps->M[0]=0.;
-	for(size_t i=1;i<=rmax;i++){
-		ps->M[i]=pfather->M[i-1];
-	}
-*/
-
 
 void Update_Immunes(){
 	double sumN[rmax+1];
@@ -219,13 +235,14 @@ void Update(){
 	if(iTime%inf_period==0) top->make_bridges();
 }
 
-
 void output(ostream &out){
 
 	double sumAllN=0.;
 
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
+		//cerr << (*it)->N << endl;
+		
 		assert((*it)->N>0);
 		sumAllN+=(*it)->N;	
 	}
@@ -233,6 +250,9 @@ void output(ostream &out){
 	out << CStrain::max_dist<<"  ";
 	//out << Diversity() <<"   ";
 	out << sumAllN <<"   ";
+	out << mtotal << "   ";
+	out << mtotal/strains.size() << "     ";
+	out << mutants;
 	out << endl;
 }
 
@@ -339,7 +359,9 @@ void Run(){
 		PrintSingleInfected();
 		//if(iTime%200==0)
 		output(out);
-		if(iTime%(inf_period*7)==0) print_diversity(outdiv);
+
+		//if(iTime%(inf_period*7)==0) 
+		print_diversity(outdiv);
 
 		//if(iTime%(inf_period*7)==0) 
 		print_fitness(outfit);
