@@ -119,7 +119,6 @@ void Immune_Selection(){
 void Genetic_Drift(){
 	//applying to all strains
 	list<CStrain*>::iterator it=strains.begin();
-	list<CStrain*>::iterator itt=strains.begin();
 
 	while(it!=strains.end()) {
 
@@ -168,25 +167,39 @@ void Mutate(CStrain *pfather){
 void Mutations(){
 	list<CStrain*>::iterator it=strains.begin();
 	mtotal=0.;
-	mutants=0.;
 	while(it!=strains.end()) {
-
 		int nn=(*it)->N;
-		int mean=1;
-
-		std::tr1::poisson_distribution<double> poisson( mean );
-		double rnd = poisson(eng);
-			
-		mutants+=rnd;
-		//cerr << "number of mutants" << "    " << rnd << "    " << endl;			
-
 		for(int i=0; i<nn; i++){
-	
 			if(unif(eng)<=mut_rate){
                 		Mutate(*it);
 				mtotal++;
+        		}
+        		if((*it)->N<1) {
+                		(*it)->die();
+                		//this also sets "it" to next value
+                		it=strains.erase(it);
+                		continue;
             		}
-            		if((*it)->N<1) {
+        	}
+        	it++;
+    	}
+}
+
+
+void Mutations2(){
+	list<CStrain*>::iterator it=strains.begin();
+	mtotal=0.;
+	while(it!=strains.end()) {
+		double nn=(*it)->N;
+		std::tr1::poisson_distribution<double> poisson( mut_rate*nn );
+		double rnd = poisson(eng);
+		int num_mutants = min(rnd,nn);
+
+		mtotal+=num_mutants;
+		//cerr << "number of mutants" << "    " << rnd << "    " << endl;
+		for(int i=1; i<=num_mutants; i++){
+                	Mutate(*it);
+        		if((*it)->N<1) {
                 		(*it)->die();
                 		//this also sets "it" to next value
                 		it=strains.erase(it);
@@ -228,7 +241,7 @@ double Diversity(){
 void Update(){
 	Immune_Selection();
 	if(iTime%inf_period==0) Genetic_Drift();
-	Mutations();
+	Mutations2();
 	Update_Immunes();
 	//trims the dead leaves
 	//if(iTime%10==0) top->trim(); not necessary!
@@ -251,8 +264,6 @@ void output(ostream &out){
 	//out << Diversity() <<"   ";
 	out << sumAllN <<"   ";
 	out << mtotal << "   ";
-	out << mtotal/strains.size() << "     ";
-	out << mutants;
 	out << endl;
 }
 
