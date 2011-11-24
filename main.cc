@@ -47,7 +47,7 @@ void define_cross_im(){
 // constant function
 
 
-	double a=0.5;
+	double a=1;
 
 	for(size_t d=0; d<=rmax; d++){
 		chi[d]=a;
@@ -285,7 +285,7 @@ void print_fitness(ostream &out){
 	out << endl;
 }
 
-ofstream singleouts[Nfiles];	
+ofstream singleouts[Nfiles];
 
 void PrintSingleInfected(){
 	list<CStrain*>::iterator it;
@@ -377,9 +377,8 @@ void Run(){
 		//if(iTime%(inf_period*7)==0) 
 		print_fitness(outfit);
 
-		if(iTime%200==0 and t <= 4.) output_graphic_tree();
+		//if(iTime%200==0 and t <= 4.) output_graphic_tree();
 	}
-	
 }
 
 void finish(){

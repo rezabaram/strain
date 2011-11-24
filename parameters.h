@@ -11,8 +11,8 @@ const int L=120; // 60 epitope codons in the HA1 domain?
 const double mu=5.8*1e-3; // units 1/year
 double mut_rate=mu*L/365.;
 const double beta=R0*nu;
-const double f0=nu*(R0-1.); // beta-nu
-const double beta0=beta/(Npop*(beta-nu));
+const double f0=nu*(R0-1.); // beta-nu 1.7
+const double beta0=beta/(Npop*(beta-nu)); // 0.00001/f0
 const double dt=1./365.;
 const double tMax=200.;
 
