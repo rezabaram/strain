@@ -40,6 +40,13 @@ const int IDstart=62300;
 double mtotal=0.;
 double mutants=0.;
 
+double chi_at_d(double d){
+	double chi;
+	chi=1./(d+1);
+
+	return chi;
+}
+
 void define_cross_im(){
 
 	chi=new double[rmax+1];
@@ -168,7 +175,7 @@ void Immune_Selection(){
 	//applying to all strains
 	for(it=strains.begin(); it!=strains.end(); it++){
 		CStrain *s=(*it);
-		s->fitness=f0*(1-beta0*s->WeightedSumM(chi) );
+		s->fitness=f0*(1-beta0*s->WeightedSumM(chi_at_d) );
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 	}
 }

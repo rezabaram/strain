@@ -14,7 +14,7 @@ class CStrain{
 	~CStrain();
 	void SetAlive();
 	double sumM();
-	double WeightedSumM(double *chi);
+	double WeightedSumM(double chi(double) );
 	int count_neigh();
 	void die();
 	void trim();
@@ -224,10 +224,10 @@ double CStrain::sumM(){
 //calculates the weighted sum of M, the weight is passed
 //to the function through the pointer of an array (chi)
 //with same length as M
-double CStrain::WeightedSumM(double *chi){
+double CStrain::WeightedSumM(double chi(double) ){
 	double sum=0.0;
 	for(size_t i=0; i<=rmax; i++){
-		sum+=M[i]*chi[i];
+		sum+=M[i]*chi(i);
 	}
 	return sum;
 }
