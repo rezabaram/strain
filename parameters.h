@@ -35,6 +35,8 @@ const double tMax=1000.;
 // ps
 // fg
 
-//bash line2file.sh  yourfile
+//gawk '{ print $0 > "line"NR}' fitness
+
+//:wq
 
 #endif /* PARAMETERS_H */

@@ -35,7 +35,8 @@ double t;
 unsigned int iTime=0;
 //Cross immunity matrix
 double *chi;
-const unsigned int Nfiles=1;
+const unsigned int Nfiles=1000;
+const int IDstart=62300;
 double mtotal=0.;
 double mutants=0.;
 
@@ -95,7 +96,7 @@ void define_cross_im(){
 
 // generalized logistic function
 
-
+/*
 	double A=2./10.; //lower asymptote
 	double K=1.; //upper asymptote
 	double B=9./2.;
@@ -106,7 +107,7 @@ void define_cross_im(){
 		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));
 		//cout << chi[d] << "    " << endl;
 	}
-
+*/
 
 // hyperbola
 
@@ -133,12 +134,12 @@ void define_cross_im(){
 */
 
 // shifted inverse
-/*	
+	
 	for(size_t d=0; d<=rmax; d++){
 		chi[d] = 1./((double)d+1.);
 		//cout << chi[d] << "    " << endl;
 	}
-*/
+
 }
 
 
@@ -317,16 +318,16 @@ void output(ostream &out){
 		sumAllN+=(*it)->N;	
 	}
 	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
-	out << CStrain::max_dist<<"  ";
+	out << CStrain::max_dist<<"    ";
 	//out << Diversity() <<"   ";
-	out << sumAllN <<"   ";
-	out << mtotal << "   ";
+	out << sumAllN <<"    ";
+	out << mtotal << "    ";
 	out << endl;
 }
 
 void print_diversity(ostream &out){
 	out << t <<"    ";
-	out << Diversity() <<"   ";
+	out << Diversity() <<"    ";
 	out << endl;
 }
 
@@ -342,13 +343,25 @@ void print_fitness(ostream &out){
 	out << endl;
 }
 
+void print_N(ostream &out){
+
+	out << t <<"    ";
+
+	list<CStrain*>::iterator it;
+
+	for(it=strains.begin(); it!=strains.end(); it++){
+		out << (*it)->N <<"    ";
+	}
+	out << endl;
+}
+
 ofstream singleouts[Nfiles];
 
 void PrintSingleInfected(){
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		if((*it)->ID<(int)Nfiles and (*it)->ID>=0){
-			singleouts[(*it)->ID]<< t<<"  "<<(*it)->N <<endl;
+		if((*it)->ID<(int)Nfiles+IDstart and (*it)->ID>=IDstart){
+			singleouts[(*it)->ID-IDstart]<< t<< "    " <<(*it)->N << "    " << (*it)->fitness << endl;
 		}
 	}
 }
@@ -392,6 +405,7 @@ void Run(){
 	ofstream out("out");
 	ofstream outdiv("diversity");
 	ofstream outfit("fitness");
+	ofstream outN("N");
 	int s=0;
 	for(size_t i=0; i<Nfiles; i++){
 		string name ="single"+stringify(i,5,'0');
@@ -424,14 +438,17 @@ void Run(){
 			break;
 		}
 	
-		//PrintSingleInfected();
+		PrintSingleInfected();
 		//if(iTime%200==0)
 		output(out);
 
-		//if(iTime%(inf_period*7)==0 and t >= 20.) print_diversity(outdiv);
+		//if(iTime%(inf_period*7)==0 and t >= 20.) 
+		//print_diversity(outdiv);
 
 		//if(iTime%(inf_period*7)==0) 
 		print_fitness(outfit);
+
+		print_N(outN);
 
 		//if(iTime%200==0 and t <= 4.) output_graphic_tree();
 	}
