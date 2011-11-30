@@ -52,9 +52,10 @@ template<class T>
 class CLink
 	{
 	public:
-	CLink(T *_h, int d=1):head(_h),length(d){ }
+	CLink(T *_h, int d=1, double im_d=1):head(_h),length(d), immune_distance(im_d){ }
 	int length;
 	T *head;
+	double immune_distance;
  	private:
 	};
 

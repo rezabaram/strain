@@ -10,7 +10,7 @@ using namespace std;
 
 class CStrain{
 	public:
-	CStrain(int i, CStrain *f);
+	CStrain(int i, CStrain *f, double im_d=1);
 	~CStrain();
 	void SetAlive();
 	double sumM();
@@ -21,13 +21,13 @@ class CStrain{
 	void trim_links();
 	CStrain *father();
 	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
-	void add_link(CStrain *ps, int d){links.push_back(CLink<CStrain>(ps, d));};
+	void add_link(CStrain *ps, int d, double im_d=1){links.push_back(CLink<CStrain>(ps, d, im_d));};
 	CLink<CStrain> to_be_bridged(int distance);
 	void make_bridges();
 	void get_diversity(double &div, size_t distance=0, CStrain *exclude=NULL);
 	void get_diversity2(double &div, size_t distance=0, CStrain *exclude=NULL);
 	double WeightedSumM0(double chi(double), size_t distance=0, CStrain *exclude=NULL);
-	double WeightedSumM(double chi(double), size_t distance=0, CStrain *exclude=NULL);
+	double WeightedSumM(double chi(double), double distance=0, CStrain *exclude=NULL);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
 	void print_bridges(ostream &out);
@@ -63,7 +63,7 @@ unsigned int CStrain::max_dist=0;
 
 //Constructor take an int for ID and the point of the
 //father node
-CStrain::CStrain(int i, CStrain *f){
+CStrain::CStrain(int i, CStrain *f, double im_d){
 	print_width = base_print_width;
 	stotal++;
 	ID=i;
@@ -73,10 +73,10 @@ CStrain::CStrain(int i, CStrain *f){
 	M0=0.0;
 	if(f!=NULL){
 		f->add_neighbour(this);
-		f->add_link(this,1);
+		f->add_link(this,1, im_d);
 	}
 	neighbours.push_back(f);
-	add_link(f,1);
+	add_link(f,1, im_d);
 
 	dead=true;
 	is_leaf=true;
@@ -124,20 +124,20 @@ double CStrain::WeightedSumM0(double chi(double), size_t distance, CStrain *excl
 	return weightedsum;
 }
 
-double CStrain::WeightedSumM(double chi(double), size_t distance, CStrain *exclude){
+double CStrain::WeightedSumM(double chi(double), double distance, CStrain *exclude){
 	if(distance>=rmax) return 0;
 	if(distance>max_dist)max_dist=distance;
 	double weightedsum=chi(distance)*N;
 
 	
 	if(links.at(0).head!=NULL and links.at(0).head!=exclude)
-		weightedsum+=links.at(0).head->WeightedSumM(chi, distance+links.at(0).length, this);
+		weightedsum+=links.at(0).head->WeightedSumM(chi, distance+links.at(0).immune_distance, this);
 
 	if(is_leaf) return weightedsum;
 
 	for(size_t i=1; i<links.size(); i++){
 		if(links.at(i).head==exclude) continue;
-		weightedsum+=links.at(i).head->WeightedSumM(chi, distance+links.at(i).length, this);
+		weightedsum+=links.at(i).head->WeightedSumM(chi, distance+links.at(i).immune_distance, this);
 	}
 	return weightedsum;
 }
