@@ -27,8 +27,8 @@ void mysort(const vector<T> &eval, size_t ind[] , size_t n){
         do{ 
                 swapped = false; 
                 for(size_t i=1; i<n-1; ++i){ 
-                         val1=eval[ind[i]]->print_width;
-                         val2=eval[ind[i+1]]->print_width;
+                         val1=eval[ind[i]].head->print_width;
+                         val2=eval[ind[i+1]].head->print_width;
                       if (val1> val2){ 
                         swap( ind[i], ind[i+1] ); 
                         swapped = true; 
@@ -52,7 +52,7 @@ template<class T>
 class CLink
 	{
 	public:
-	CLink(T *_h, int d=1, double im_d=1):head(_h),length(d), immune_distance(im_d){ }
+	explicit CLink(T *_h, int d=1, double im_d=1):head(_h),length(d), immune_distance(im_d){ }
 	int length;
 	T *head;
 	double immune_distance;
