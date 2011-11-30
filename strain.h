@@ -14,7 +14,7 @@ class CStrain{
 	~CStrain();
 	void SetAlive();
 	double sumM();
-	double WeightedSumM(double chi(double) );
+	//double WeightedSumM(double chi(double) );
 	int count_neigh();
 	void die();
 	void trim();
@@ -22,12 +22,12 @@ class CStrain{
 	CStrain *father();
 	void add_neighbour(CStrain *ps){neighbours.push_back(ps);is_leaf=false;};
 	void add_link(CStrain *ps, int d){links.push_back(CLink<CStrain>(ps, d));};
-	void get_infected(double *sumN, size_t distance=0, CStrain *exclude=NULL);
-	void get_infected2(double *sumN, size_t distance=0, CStrain *exclude=NULL);
 	CLink<CStrain> to_be_bridged(int distance);
 	void make_bridges();
 	void get_diversity(double &div, size_t distance=0, CStrain *exclude=NULL);
 	void get_diversity2(double &div, size_t distance=0, CStrain *exclude=NULL);
+	double WeightedSumM0(double chi(double), size_t distance=0, CStrain *exclude=NULL);
+	double WeightedSumM(double chi(double), size_t distance=0, CStrain *exclude=NULL);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
 	void print_bridges(ostream &out);
@@ -36,12 +36,12 @@ class CStrain{
 	double cal_print_widths();
 	COffset &cal_offsets();
 
+	double accN;
 	double fitness;
 	double N;
 	int ID;
 	bool dead;
 	bool is_leaf;
-	double *M;
 	static unsigned int max_dist;
 	std::vector<CStrain*> neighbours;
 	std::vector<CLink<CStrain> > links;
@@ -50,6 +50,7 @@ class CStrain{
 	double print_width;
 	int color;
 	double x, y;
+	double M0;
 	private:
 	static const double base_print_width=0.005;
 };
@@ -68,6 +69,8 @@ CStrain::CStrain(int i, CStrain *f){
 	ID=i;
 	N=0.0;
 	fitness=0.0;
+	accN=0.0;
+	M0=0.0;
 	if(f!=NULL){
 		f->add_neighbour(this);
 		f->add_link(this,1);
@@ -87,15 +90,10 @@ CStrain::CStrain(int i, CStrain *f){
 void CStrain::SetAlive(){
 	dead=false;
 	color=0;
-	M=new double[rmax+1];
-	for(size_t i=0;i<=rmax;i++){
-		M[i]=0.0;
-	}
 }
 
 //Cleans the allocated memory if not yet cleaned 
 CStrain::~CStrain(){
-	if(M!=NULL) delete[] M; 
 	stotal--;
 }
 
@@ -109,40 +107,42 @@ CStrain* CStrain::father(){
 //sumN[1] is the sum of N's of all strains at distance 1
 //....
 //sumN[rmax] is the sum of N's of all strains at distance rmax
-void CStrain::get_infected(double *sumN, size_t distance, CStrain *exclude){
-	if(distance>=rmax) return;
+double CStrain::WeightedSumM0(double chi(double), size_t distance, CStrain *exclude){
+	if(distance>=rmax) return 0;
 	if(distance>max_dist)max_dist=distance;
-	sumN[distance]+=N;
+	double weightedsum=chi(distance)*accN;
 
 	
 	if(father()!=NULL and father()!=exclude) 
-		father()->get_infected(sumN, distance+1, this);
+		weightedsum+=father()->WeightedSumM0(chi, distance+1, this);
 
-	if(is_leaf) return;
+	//if(is_leaf) return weightedsum;
 	for(size_t i=1; i<neighbours.size(); i++){
 		if(neighbours.at(i)==exclude) continue;
-		neighbours.at(i)->get_infected(sumN, distance+1, this);
+		weightedsum+=neighbours.at(i)->WeightedSumM0(chi, distance+1, this);
 	}
-	return;
+	return weightedsum;
 }
 
-void CStrain::get_infected2(double *sumN, size_t distance, CStrain *exclude){
-	if(distance>=rmax) return;
+double CStrain::WeightedSumM(double chi(double), size_t distance, CStrain *exclude){
+	if(distance>=rmax) return 0;
 	if(distance>max_dist)max_dist=distance;
-	sumN[distance]+=N;
+	double weightedsum=chi(distance)*N;
 
 	
 	if(links.at(0).head!=NULL and links.at(0).head!=exclude)
-		links.at(0).head->get_infected2(sumN, distance+links.at(0).length, this);
+		weightedsum+=links.at(0).head->WeightedSumM(chi, distance+links.at(0).length, this);
 
-	if(is_leaf) return;
+	if(is_leaf) return weightedsum;
 
 	for(size_t i=1; i<links.size(); i++){
 		if(links.at(i).head==exclude) continue;
-		links.at(i).head->get_infected2(sumN, distance+links.at(i).length, this);
+		weightedsum+=links.at(i).head->WeightedSumM(chi, distance+links.at(i).length, this);
 	}
-	return;
+	return weightedsum;
 }
+
+
 
 CLink<CStrain> CStrain::to_be_bridged(int distance ){
 	
@@ -211,19 +211,10 @@ int CStrain::count_neigh(){
 	return count;
 }
 
-
-double CStrain::sumM(){
-	double sum=0.0;
-	for(size_t i=0; i<=rmax; i++){
-		sum+=M[i];
-	}
-	return sum;
-}
-
-
 //calculates the weighted sum of M, the weight is passed
 //to the function through the pointer of an array (chi)
 //with same length as M
+/*
 double CStrain::WeightedSumM(double chi(double) ){
 	double sum=0.0;
 	for(size_t i=0; i<=rmax; i++){
@@ -231,7 +222,7 @@ double CStrain::WeightedSumM(double chi(double) ){
 	}
 	return sum;
 }
-
+*/
 // To save some memory we clean M of 
 // dead strains
 void CStrain::die(){
@@ -239,8 +230,6 @@ void CStrain::die(){
 	N=0.0;
 	dead=true;
 	color=1;
-	delete[] M;
-	M=NULL;
 }
 
 void CStrain::trim_links(){
@@ -292,6 +281,7 @@ void CStrain::print(ostream &out){
 }
 
 //prints N, number of neighbours and their IDs
+/*
 void CStrain::print_node(ostream &out)const{
 	
 	out<<ID<< "   "<<N<<"   ";
@@ -318,6 +308,7 @@ void CStrain::print_node(ostream &out)const{
 	}
 	out<<endl;
 }
+*/
 /*
 //FIXME
 CStrain::CStrain(stringstream &ss){

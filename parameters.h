@@ -30,6 +30,8 @@ const double tMax=1000.;
 
 // git add signal.h
 
+// git checkout branch
+
 // ./strain &
 // kill -30 27241 (the latter is the process number)
 // ps

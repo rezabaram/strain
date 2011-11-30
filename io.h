@@ -6,6 +6,7 @@
 #include"strain.h"
 using namespace std;
 
+/*
 void SaveState(ostream &out, const vector<CStrain*> &strains){
 	out<<strains.size()<<"   "<<rmax<<endl;
 	vector<CStrain*>::const_iterator it;
@@ -13,7 +14,9 @@ void SaveState(ostream &out, const vector<CStrain*> &strains){
 		(*it)->print_node(out);
 	}
 }
+*/
 
+/*
 void ReadState(istream &input, vector<CStrain*> &strains){
 	strains.clear();
 	string line;
@@ -68,5 +71,6 @@ void ReadState(istream &input, vector<CStrain*> &strains){
 	}
 
 }
+*/
 
 #endif /* IO_H */

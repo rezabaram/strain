@@ -35,8 +35,8 @@ double t;
 unsigned int iTime=0;
 //Cross immunity matrix
 double *chi;
-const unsigned int Nfiles=1000;
-const int IDstart=62300;
+const unsigned int Nfiles=1;//1000;
+const int IDstart=1;//62300;
 double mtotal=0.;
 double mutants=0.;
 
@@ -161,7 +161,7 @@ void Initial_Conditions(){
 	top=new CStrain(stotal,NULL);
 	stotal++;
 	top->N=N0;
-	top->M[0]=0.;
+	top->M0=0.;
 	strains.push_back(top);
 	allstrains.push_back(top);
 	define_cross_im();
@@ -175,7 +175,8 @@ void Immune_Selection(){
 	//applying to all strains
 	for(it=strains.begin(); it!=strains.end(); it++){
 		CStrain *s=(*it);
-		s->fitness=f0*(1-beta0*s->WeightedSumM(chi_at_d) );
+		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
+		s->fitness=f0*(1-beta0*s->M0);
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 	}
 }
@@ -215,11 +216,13 @@ void Genetic_Drift(){
 void Mutate(CStrain *pfather){
 	CStrain *ps = new CStrain(stotal,pfather);
 
-	ps->M[0]=0.;
+	ps->M0=ps->WeightedSumM0(chi_at_d);
 
+	/*
 	for(size_t i=1;i<=rmax;i++){
 		ps->M[i]=pfather->M[i-1];
 	}
+	*/
 
 	pfather->N--;
 
@@ -276,16 +279,10 @@ void Mutations2(){
 }
 
 void Update_Immunes(){
-	double sumN[rmax+1];
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		for(size_t i=0; i<rmax+1; i++) sumN[i]=0; 
-
-		(*it)->get_infected2(sumN);
-
-		for(size_t i=0; i<=rmax; i++) (*it)->M[i]+=nu*sumN[i]*dt;
+		(*it)->accN+=nu*dt*(*it)->N;
 	}
-
 }
 
 double Diversity(){
