@@ -42,7 +42,7 @@ double mutants=0.;
 
 double chi_at_d(double d){
 	double chi;
-	chi=1./(d+1);
+	chi=1./((double)d+1.);
 
 	return chi;
 }
@@ -164,7 +164,7 @@ void Initial_Conditions(){
 	top->M0=0.;
 	strains.push_back(top);
 	allstrains.push_back(top);
-	define_cross_im();
+	//define_cross_im();
 }
 
 //create a new strain through mutation
@@ -214,7 +214,7 @@ void Genetic_Drift(){
 }
 
 void Mutate(CStrain *pfather){
-	CStrain *ps = new CStrain(stotal,pfather);
+	CStrain *ps = new CStrain(stotal,pfather,1./2.+3.*unif(eng));
 
 	ps->M0=ps->WeightedSumM0(chi_at_d);
 

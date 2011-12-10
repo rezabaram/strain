@@ -41,4 +41,7 @@ const double tMax=1000.;
 
 //:wq
 
+//mplayer N_distribution.avi -loop 5
+//mplayer N_distribution.avi -speed 0.5
+
 #endif /* PARAMETERS_H */

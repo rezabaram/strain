@@ -3,7 +3,7 @@ clear all
 % plots fitness or N distribution for each time step
 
 init_file=6570;
-num_files=6590;%6935; 
+num_files=6935; %79027; % fitness shifted1overd
 
 for j=init_file:1:num_files % number of lines in the file "fitness"
 
@@ -33,6 +33,7 @@ max_fitness=max(most_fit);
 min_fitness=min(least_fit);
 
 bins=min_fitness:(max_fitness-min_fitness)/100:max_fitness;
+n=zeros(1,length(bins));
 
 for j=init_file:1:num_files % number of lines in the file "fitness"
 
@@ -53,16 +54,7 @@ for i=2:1:length(a)
     end
 end
 
-h=figure(1)
-hist(nonzero_fitness,bins)
-%axis tight
-set(gca,'nextplot','replacechildren');
-title(sprintf('file name %s, fitness distribution for t=%g years',filename,a(1)))
-xlabel('fitness values')
-ylabel('counts')
-saveas(h,['fitness_distribution_snapshot',int2str(j-init_file+1),'.fig'])
-Mov(j-init_file+1)=getframe(); 
-
+n=n+hist(nonzero_fitness,bins);
 
 %title(sprintf('R_0 = %g, 1/nu = %g days, i(0) = %g',R0,1/nu*365,i0))
 
@@ -70,5 +62,11 @@ Mov(j-init_file+1)=getframe();
 
 end
 
-%saveas(h,['fitness_distribution_snapshot','.eps']);
-%saveas(h,['fitness_distribution_snapshot','.fig']);
+h=figure(1)
+bar(bins,n);
+title('mean fitness distribution for 18 years < t < 19 years');
+xlabel('fitness values');
+ylabel('counts');
+
+%saveas(h,['mean_fitness_distribution','.eps']);
+%saveas(h,['mean_fitness_distribution','.fig']);
