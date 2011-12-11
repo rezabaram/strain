@@ -2,8 +2,9 @@
 #define TOOLS_H 
 #include<iomanip>
 #include<string>
+#include<tr1/random>
 using namespace std;
-
+/*
 template <class T>
 string stringify(T x, int width=15, const char ch=' ')
  {
@@ -13,6 +14,20 @@ string stringify(T x, int width=15, const char ch=' ')
    return o.str();
  }
 
+*/
+
+extern std::tr1::normal_distribution<double> normal;
+extern std::tr1::ranlux64_base_01 eng;
+
+template<class T>
+T rand_vec(){
+	T v;
+	for(size_t i=0; i<T::dim; i++){
+	 v(i)=normal(eng);
+	}
+	v.normalize();
+	return v;
+}
 
 template<class T>
 void mysort(const vector<T> &eval, size_t ind[] , size_t n){ 

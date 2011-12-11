@@ -5,6 +5,10 @@
 #include<assert.h>
 #include"parameters.h"
 #include"tools.h"
+#include"vec.h"
+
+typedef vec2d vecType;
+
 
 using namespace std;
 extern ofstream histout;
@@ -53,6 +57,7 @@ class CStrain{
 	int color;
 	double x, y;
 	double M0;
+	vecType coord;
 	private:
 	static const double base_print_width=0.005;
 };
@@ -66,6 +71,7 @@ unsigned int CStrain::max_dist=0;
 //Constructor take an int for ID and the point of the
 //father node
 CStrain::CStrain(int i, CStrain *f){
+	coord=vecType(0.0);	
 	print_width = base_print_width;
 	stotal++;
 	ID=i;

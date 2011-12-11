@@ -11,20 +11,20 @@
 #include"parameters.h"
 #include"io.h"
 #include"signal.h"
-#include"config.h"
 #include"chi.h"
 int seed=time(0);
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
+std::tr1::normal_distribution<double> normal(0, 1);
 
 ofstream logtime("logtime");
 ofstream histout("pair_distances");
+ofstream coordout("coord");
 bool print_hist=false;
 bool print_hist_on=true;
 
 CTimer timer;
 
-CConfig config("config");
 
 
 using namespace std;
@@ -49,7 +49,6 @@ void Initial_Conditions(){
 	cerr<< "Seed: "<<seed <<endl;
 	eng.seed(seed);
 	//eng.seed(10);
-	rmax=config.get_param<size_t>("rmax");
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
@@ -64,12 +63,42 @@ void Initial_Conditions(){
 //create a new strain through mutation
 //and add to the list
 
+double EucWeightedSumM0(CStrain *s, double chi(double) ){
+	vector<CStrain*>::iterator it;
+	double M=0, d=0;
+	for(it=allstrains.begin(); it!=allstrains.end(); it++){
+		d=(s->coord-(*it)->coord).abs();
+		if(d>rmax)continue;
+		M+=chi(d)*(*it)->accN;
+	}
+	return M;
+}
+double EucWeightedSumM(CStrain *s, double chi(double) ){
+	list<CStrain*>::iterator it;
+	double M=0, d=0;
+	for(it=strains.begin(); it!=strains.end(); it++){
+		d=(s->coord-(*it)->coord).abs();
+		if(d>rmax)continue;
+		M+=chi(d)*(*it)->N;
+	}
+	return M;
+}
+
+void print_coords(ostream &out){
+	vector<CStrain*>::iterator it;
+	double M=0, d=0;
+	for(it=allstrains.begin(); it!=allstrains.end(); it++){
+		out<< (*it)->coord <<endl;
+	}
+}
+
 void Immune_Selection(){
 	list<CStrain*>::iterator it;
 	//applying to all strains
 	for(it=strains.begin(); it!=strains.end(); it++){
 		CStrain *s=(*it);
-		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
+		//s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
+		s->M0+=EucWeightedSumM(s,chi_at_d)*nu*dt;
 		s->fitness=f0*(1-beta0*s->M0);
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 		assert(s->N>0);
@@ -111,7 +140,9 @@ void Genetic_Drift(){
 void Mutate(CStrain *pfather){
 	CStrain *ps = new CStrain(stotal,pfather);
 
-	ps->M0=ps->WeightedSumM0(chi_at_d);
+	//ps->M0=ps->WeightedSumM0(chi_at_d);
+	ps->M0=EucWeightedSumM0(ps,chi_at_d);
+	ps->coord=pfather->coord+rand_vec<vecType>();
 
 	/*
 	for(size_t i=1;i<=rmax;i++){
@@ -342,7 +373,8 @@ void Run(){
 
 		Update();
 		if(strains.size()==0) {
-			output_graphic_tree();
+			//output_graphic_tree();
+			print_coords(coordout);
 			break;
 		}
 	
@@ -368,6 +400,7 @@ void finish(){
 }
 
 int main(int argc, char **argv){
+	
 
 	if(argc>1)seed=atoi(argv[1]);
 	signal(30,SignalControlReport);
@@ -375,7 +408,14 @@ int main(int argc, char **argv){
 	signal(32,SignalControlReport);
 
 	Initial_Conditions();
-
+/*
+	Vec<5,double> v1, v2;
+	for(int i=0; i<100000; i++){
+	v1=rand_vec<Vec<5,double> >();
+	v2=rand_vec<Vec<5,double> >();
+	cout<< v1*v2 <<endl;
+	}
+*/
 	Run();
 	finish();
 
