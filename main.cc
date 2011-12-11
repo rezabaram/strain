@@ -12,11 +12,16 @@
 #include"io.h"
 #include"signal.h"
 #include"config.h"
+#include"chi.h"
 int seed=time(0);
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
 
 ofstream logtime("logtime");
+ofstream histout("pair_distances");
+bool print_hist=false;
+bool print_hist_on=true;
+
 CTimer timer;
 
 CConfig config("config");
@@ -34,121 +39,10 @@ CStrain *top=NULL;
 double t;
 unsigned int iTime=0;
 //Cross immunity matrix
-double *chi;
 const unsigned int Nfiles=1;//1000;
 const int IDstart=1;//62300;
 double mtotal=0.;
 double mutants=0.;
-
-double chi_at_d(double d){
-	double chi;
-	chi=1./(d+1);
-
-	return chi;
-}
-
-void define_cross_im(){
-
-	chi=new double[rmax+1];
-
-
-// constant function
-
-/*
-	double a=0.5;
-
-	for(size_t d=0; d<=rmax; d++){
-		chi[d]=a;
-	}
-*/
-
-// step function
-/*
-	double a=1.;
-	size_t cutoff=3;
-
-	for(size_t d=0; d<=cutoff; d++){
-		chi[d]=a;
-		//cout << chi[d] << "    ";
-	}
-
-	for(size_t d=cutoff+1; d<=rmax; d++){
-		chi[d]=0.;
-		//cout << chi[d] << "    ";
-	}
-*/
-// double step
-
-/*
-	double a=1.;
-	double b=0.5;
-	size_t cutoff=3;
-
-	for(size_t d=0; d<=cutoff; d++){
-		chi[d]=a;
-		//cout << chi[d] << "    " << endl;
-	}
-
-	for(size_t d=cutoff+1; d<=2*cutoff+1; d++){
-		chi[d]=b;
-		//cout << chi[d] << "    " << endl;
-	}
-
-	for(size_t d=2*cutoff+1; d<=rmax; d++){
-		chi[d]=0.;
-		//cout << chi[d] << "    " << endl;
-	}
-*/
-
-
-// generalized logistic function
-
-/*
-	double A=2./10.; //lower asymptote
-	double K=1.; //upper asymptote
-	double B=9./2.;
-	double Q=5./3.;
-	double d0=4.;
-
-	for(size_t d=0; d<=rmax; d++){
-		chi[d] = A + (K-A)/(1.+Q*exp(B*(d-d0)));
-		//cout << chi[d] << "    " << endl;
-	}
-*/
-
-// hyperbola
-
-/*
-	double m=4.;
-	double y0=0.; // asymptote
-	double x0=-4.;
-
-	for(size_t d=0; d<=rmax; d++){
-		chi[d] = m/(d-x0) + y0;
-		//cout << chi[d] << "    " << endl;
-	}
-*/
-
-// inverse
-
-/*
-	chi[0]=1;
-
-	for(size_t d=1; d<=rmax; d++){
-		chi[d] = 1./(double)d;
-		//cout << chi[d] << "    " << endl;
-	}
-*/
-
-// shifted inverse
-	
-	for(size_t d=0; d<=rmax; d++){
-		chi[d] = 1./((double)d+1.);
-		//cout << chi[d] << "    " << endl;
-	}
-
-}
-
 
 void Initial_Conditions(){
 	//seed=1321702805;
@@ -164,7 +58,7 @@ void Initial_Conditions(){
 	top->M0=0.;
 	strains.push_back(top);
 	allstrains.push_back(top);
-	define_cross_im();
+	//define_cross_im();
 }
 
 //create a new strain through mutation
@@ -178,6 +72,7 @@ void Immune_Selection(){
 		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
 		s->fitness=f0*(1-beta0*s->M0);
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
+		assert(s->N>0);
 	}
 }
 
@@ -308,6 +203,7 @@ void Update(){
 	//trims the dead leaves
 	//if(iTime%10==0) top->trim(); not necessary!
 	if(iTime%inf_period==0) top->make_bridges();
+	if(print_hist) histout<<endl;
 }
 
 void output(ostream &out){
@@ -418,6 +314,14 @@ void Run(){
 
 	unsigned int iTimeMax=tMax/dt;
 	for(iTime=1; iTime<=iTimeMax; iTime++){
+		t=iTime*dt;
+
+		print_hist=false;
+		if(print_hist_on and iTime%(inf_period*90)==0 and t>=15.){
+			print_hist=true;
+			histout<<t<<"   ";
+		}
+
 		CStrain::max_dist=0;
 		if(bSignal==0) {
         		//mut_rate*=0.95;
@@ -435,7 +339,7 @@ void Run(){
 
 		//logtime<<timer.read()/strains.size()<<"   "<<t<<endl;
 		logtime<<timer.read()<<"   "<<t<<endl;
-		t=iTime*dt;
+
 		Update();
 		if(strains.size()==0) {
 			output_graphic_tree();
@@ -446,7 +350,7 @@ void Run(){
 		//if(iTime%200==0)
 		output(out);
 
-		//if(iTime%(inf_period*7)==0 and t >= 20.) 
+		//if(iTime%(inf_period*7)==0 and t >= 10.) 
 		//print_diversity(outdiv);
 
 		//if(iTime%(inf_period*7)==0) 

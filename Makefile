@@ -20,10 +20,12 @@ ps:
 
 bak:
 	rm -rf trash/*
-	mv -f tree0* single0* out logtime diversity trash/
+	mv -f tree0* single0* out logtime diversity N fitness trash/
 
 clean:
 	rm -f tree0* single0* out logtime tree 
 
+lines: 
+	gawk '{ print $0 > "line"NR}' $(FILE)
 	
 #1321731977

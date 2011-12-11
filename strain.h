@@ -1,12 +1,14 @@
 #ifndef STRAIN_H
 #define STRAIN_H
 #include <vector>
+#include <fstream>
 #include<assert.h>
 #include"parameters.h"
 #include"tools.h"
 
 using namespace std;
-
+extern ofstream histout;
+extern bool print_hist;
 
 class CStrain{
 	public:
@@ -128,6 +130,7 @@ double CStrain::WeightedSumM(double chi(double), size_t distance, CStrain *exclu
 	if(distance>=rmax) return 0;
 	if(distance>max_dist)max_dist=distance;
 	double weightedsum=chi(distance)*N;
+	if(print_hist and !dead and distance>0) histout<<distance<<"    ";
 
 	
 	if(links.at(0).head!=NULL and links.at(0).head!=exclude)

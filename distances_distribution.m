@@ -2,9 +2,9 @@ clear all
 
 % plots fitness or N distribution for each time step
 
-init_file=30000; %6570;
-num_files=44133; %6570+330; 
-step=10;
+init_file=1; %6570;
+num_files=150; %6570+330; 
+step=1;
 
 s=1;
 
@@ -16,10 +16,13 @@ a=load(filename);
 
 %time(j)=a(1);
 
+if(length(a)~=1)
+    
 most_fit(s)=max( a(2:length(a)) );
 least_fit(s)=min( a(2:length(a)) );
 
 s=s+1;
+end
 
 end
 
@@ -37,13 +40,17 @@ a=load(filename);
 
 %time(j)=a(1);
 
+if(length(a)~=1)
+
 h=figure(1)
-hist( a(2:length(a)) , bins)
-axis ([-10 10 0 40])
-axis 'auto x'
+[counts,distance]=hist( a(2:length(a)) , bins);
+bar(distance,counts/2)
+
+%axis ([-10 10 0 40])
+%axis 'auto x'
 set(gca,'nextplot','replacechildren');
-title(sprintf('file name %s, fitness distribution for t=%g years',filename,a(1)))
-xlabel('fitness values')
+title(sprintf('file name %s, distance distribution for t=%g years',filename,a(1)))
+xlabel('distance')
 ylabel('counts')
 
 %saveas(h,['fitness_distribution_snapshot',int2str(s),'.fig'])
@@ -53,8 +60,9 @@ s=s+1;
 
 %title(sprintf('R_0 = %g, 1/nu = %g days, i(0) = %g',R0,1/nu*365,i0))
 
-%pause(0.25)
+pause(0.25)
 
+end
 end
 
 %movie2avi(Mov, 'fitness_distribution.avi')

@@ -32,12 +32,16 @@ const double tMax=1000.;
 
 // git checkout branch
 
+//  git commit -a --amend
+
 // ./strain &
 // kill -30 27241 (the latter is the process number)
 // ps
 // fg
 
 //gawk '{ print $0 > "line"NR}' fitness
+
+//du -h pair_distances
 
 //:wq
 
