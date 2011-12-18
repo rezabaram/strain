@@ -38,6 +38,7 @@ class CStrain{
 
 	double accN;
 	double fitness;
+	unsigned int red_m;
 	double N;
 	int ID;
 	bool dead;
@@ -71,12 +72,15 @@ CStrain::CStrain(int i, CStrain *f, double im_d){
 	fitness=0.0;
 	accN=0.0;
 	M0=0.0;
+	red_m=0;
 	if(f!=NULL){
 		f->add_neighbour(this, 1, im_d);
 		f->add_link(this,1, im_d);
+		red_m=f->red_m;
 	}
 	add_neighbour(f,1, im_d);
 	add_link(f,1, im_d);
+	
 
 	dead=true;
 	is_leaf=true;

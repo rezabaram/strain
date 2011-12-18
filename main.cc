@@ -42,7 +42,8 @@ double mutants=0.;
 
 double chi_at_d(double d){
 	double chi;
-	chi=1./((double)d+1.);
+	chi=4./((double)d+4.);
+	//chi=1.;
 
 	return chi;
 }
@@ -176,7 +177,7 @@ void Immune_Selection(){
 	for(it=strains.begin(); it!=strains.end(); it++){
 		CStrain *s=(*it);
 		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
-		s->fitness=f0*(1-beta0*s->M0);
+		s->fitness=f0*(1-beta0*s->M0) - s->red_m*Cf;
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 	}
 }
@@ -214,7 +215,13 @@ void Genetic_Drift(){
 }
 
 void Mutate(CStrain *pfather){
-	CStrain *ps = new CStrain(stotal,pfather,1./2.+3.*unif(eng));
+
+	double dist=0.;
+	bool red=true;
+	if (unif(eng) <=0.4) {dist=1.; red=false;}
+
+	CStrain *ps = new CStrain(stotal,pfather,dist);
+	if(red) ps->red_m++;
 
 	ps->M0=ps->WeightedSumM0(chi_at_d);
 
