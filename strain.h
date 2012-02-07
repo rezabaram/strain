@@ -28,6 +28,8 @@ class CStrain{
 	void get_diversity2(double &div, size_t distance=0, CStrain *exclude=NULL);
 	double WeightedSumM0(double chi(double), double distance=0, CStrain *exclude=NULL);
 	double WeightedSumM(double chi(double), double distance=0, CStrain *exclude=NULL);
+	double calSubN();
+	void setFreq(double f);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
 	void print_bridges(ostream &out);
@@ -35,7 +37,8 @@ class CStrain{
 	void print2(ostream &out, double x, double y);
 	double cal_print_widths();
 	COffset &cal_offsets();
-
+	double Freq, maxFreq;
+	double SubN;
 	double accN;
 	double fitness;
 	unsigned int red_m;
@@ -72,6 +75,9 @@ CStrain::CStrain(int i, CStrain *f, double im_d){
 	fitness=0.0;
 	accN=0.0;
 	M0=0.0;
+	SubN=0.;
+	Freq=0.;
+	maxFreq=0.;
 	red_m=0;
 	if(f!=NULL){
 		f->add_neighbour(this, 1, im_d);
@@ -104,6 +110,11 @@ CStrain::~CStrain(){
 //Returns the pointer to the father if not root node
 CStrain* CStrain::father(){
 	return neighbours.at(0).head;
+}
+
+void CStrain::setFreq(double f){
+          Freq=f;
+          if(Freq>maxFreq)maxFreq=Freq;
 }
 
 //Returns the sum of N of all strains at distances up to rmax
@@ -252,6 +263,16 @@ void CStrain::trim_links(){
                 is_leaf=true;
                  if(links.size()>1) color=2;//color for dead branch
        }
+}
+
+double CStrain::calSubN(){
+	double SubN=N;
+	std::vector<CLink<CStrain> >::iterator it;
+	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
+		SubN+=(*it).head->calSubN();
+	}
+	
+	return SubN;
 }
 
 void CStrain::trim(){

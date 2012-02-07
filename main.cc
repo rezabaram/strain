@@ -27,7 +27,7 @@ using namespace std;
 //To to be used for assigning ID's
 int stotal=0;
 //List of all alive strains
-vector<CStrain *> allstrains;
+vector<CStrain*> allstrains;
 list<CStrain*> strains;
 CStrain *top=NULL;
 //time
@@ -170,6 +170,18 @@ void Initial_Conditions(){
 
 //create a new strain through mutation
 //and add to the list
+double Nall(){
+	double sumAllN=0.;
+
+	list<CStrain*>::iterator it;
+	for(it=strains.begin(); it!=strains.end(); it++){
+		//cerr << (*it)->N << endl;
+		
+		assert((*it)->N>0);
+		sumAllN+=(*it)->N;	
+	}
+	return sumAllN;	
+}
 
 void Immune_Selection(){
 	list<CStrain*>::iterator it;
@@ -177,7 +189,7 @@ void Immune_Selection(){
 	for(it=strains.begin(); it!=strains.end(); it++){
 		CStrain *s=(*it);
 		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
-		s->fitness=f0*(1-beta0*s->M0) - s->red_m*Cf;
+		s->fitness=f0*(1-beta0*s->M0*Nall()*cp) - s->red_m*Cf;
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 	}
 }
@@ -218,7 +230,7 @@ void Mutate(CStrain *pfather){
 
 	double dist=0.;
 	bool red=true;
-	if (unif(eng) <=0.4) {dist=1.; red=false;}
+	if (unif(eng) <= 1.) {dist=1.; red=false;}
 
 	CStrain *ps = new CStrain(stotal,pfather,dist);
 	if(red) ps->red_m++;
@@ -317,23 +329,43 @@ void Update(){
 	if(iTime%inf_period==0) top->make_bridges();
 }
 
+
 void output(ostream &out){
 
-	double sumAllN=0.;
+	vector<CStrain*>::iterator it; 
 
-	list<CStrain*>::iterator it;
-	for(it=strains.begin(); it!=strains.end(); it++){
-		//cerr << (*it)->N << endl;
-		
-		assert((*it)->N>0);
-		sumAllN+=(*it)->N;	
-	}
+	double totalN=top->calSubN();
+
+	for(it=allstrains.begin(); it!=allstrains.end(); it++){
+		(*it)->setFreq((*it)->SubN/totalN);
+	}			
+
 	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
 	out << CStrain::max_dist<<"    ";
 	//out << Diversity() <<"   ";
-	out << sumAllN <<"    ";
-	out << mtotal << "    ";
+	out << Nall() <<"    ";
+	//out << mtotal << "    ";
+	out << totalN;
 	out << endl;
+
+}
+
+void FreqDist(){
+	double bins[20];
+	int max_i;
+	vector<CStrain*>::iterator it;
+	for(it=allstrains.begin(); it!=allstrains.end(); it++){
+		cout<<(*it)->SubN<<"    "<<endl;
+		max_i=19*(*it)->maxFreq;	
+		for(int i=0; i<=max_i;i++){
+			bins[i]++;
+		}
+	}
+	
+	for(int i=0; i<20;i++){
+		cout<<i/20.0<<"   "<<bins[i]<<endl;
+	}
+
 }
 
 void print_diversity(ostream &out){
@@ -451,6 +483,7 @@ void Run(){
 	
 		PrintSingleInfected();
 		//if(iTime%200==0)
+
 		output(out);
 
 		//if(iTime%(inf_period*7)==0 and t >= 20.) 
@@ -466,7 +499,7 @@ void Run(){
 }
 
 void finish(){
-	
+	FreqDist();
 	delete top;
 }
 
