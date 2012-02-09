@@ -29,7 +29,7 @@ class CStrain{
 	double WeightedSumM0(double chi(double), double distance=0, CStrain *exclude=NULL);
 	double WeightedSumM(double chi(double), double distance=0, CStrain *exclude=NULL);
 	double calSubN();
-	void setFreq(double f);
+	void setFreq(double f,double tt);
 	void print(ostream &out);
 	void print_node(ostream &out)const;
 	void print_bridges(ostream &out);
@@ -44,8 +44,12 @@ class CStrain{
 	unsigned int red_m;
 	double N;
 	int ID;
+	double crtime;
+	double fixtime;
+	bool notfixed;
 	bool dead;
 	bool is_leaf;
+	int mut_type;
 	static unsigned int max_dist;
 	std::vector<CLink<CStrain> > neighbours;
 	std::vector<CLink<CStrain> > links;
@@ -78,6 +82,7 @@ CStrain::CStrain(int i, CStrain *f, double im_d){
 	SubN=0.;
 	Freq=0.;
 	maxFreq=0.;
+	notfixed=true;
 	red_m=0;
 	if(f!=NULL){
 		f->add_neighbour(this, 1, im_d);
@@ -112,7 +117,9 @@ CStrain* CStrain::father(){
 	return neighbours.at(0).head;
 }
 
-void CStrain::setFreq(double f){
+void CStrain::setFreq(double f,double tt){
+	  int max_bin=(nbins-1)*maxFreq;
+	  if( max_bin==(nbins-1) && notfixed){ fixtime=tt; notfixed=false;}
           Freq=f;
           if(Freq>maxFreq)maxFreq=Freq;
 }
@@ -266,7 +273,7 @@ void CStrain::trim_links(){
 }
 
 double CStrain::calSubN(){
-	double SubN=N;
+	SubN=N;
 	std::vector<CLink<CStrain> >::iterator it;
 	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
 		SubN+=(*it).head->calSubN();

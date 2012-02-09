@@ -153,6 +153,7 @@ void define_cross_im(){
 
 void Initial_Conditions(){
 	//seed=1321702805;
+	t=0.;
 	cerr<< "Seed: "<<seed <<endl;
 	eng.seed(seed);
 	//eng.seed(10);
@@ -163,6 +164,8 @@ void Initial_Conditions(){
 	stotal++;
 	top->N=N0;
 	top->M0=0.;
+	top->crtime=t;
+	top->mut_type=1;
 	strains.push_back(top);
 	allstrains.push_back(top);
 	//define_cross_im();
@@ -233,9 +236,11 @@ void Mutate(CStrain *pfather){
 	if (unif(eng) <= 1.) {dist=1.; red=false;}
 
 	CStrain *ps = new CStrain(stotal,pfather,dist);
-	if(red) ps->red_m++;
+	ps->mut_type = 1;
+	if(red) { ps->red_m++; ps->mut_type = 0; }
 
 	ps->M0=ps->WeightedSumM0(chi_at_d);
+	ps->crtime=t;
 
 	/*
 	for(size_t i=1;i<=rmax;i++){
@@ -297,11 +302,18 @@ void Mutations2(){
     	}
 }
 
+double infperyear=0.;
+//int iin=0;
+
 void Update_Immunes(){
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
 		(*it)->accN+=nu*dt*(*it)->N;
+		if (t>=40. && t<=41.) {infperyear+=nu*dt*(*it)->N;}
 	}
+
+	//if (t>=40. && t<=41.) {iin++;}
+
 }
 
 double Diversity(){
@@ -331,39 +343,57 @@ void Update(){
 
 
 void output(ostream &out){
-
+	
 	vector<CStrain*>::iterator it; 
 
 	double totalN=top->calSubN();
 
 	for(it=allstrains.begin(); it!=allstrains.end(); it++){
-		(*it)->setFreq((*it)->SubN/totalN);
-	}			
-
+		(*it)->setFreq((*it)->SubN/totalN,t);
+	}	
+	
 	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
 	out << CStrain::max_dist<<"    ";
-	//out << Diversity() <<"   ";
+	out << Diversity() <<"   ";
 	out << Nall() <<"    ";
 	//out << mtotal << "    ";
-	out << totalN;
+	//out << totalN;
 	out << endl;
 
 }
 
 void FreqDist(){
-	double bins[20];
+	double binsGreen[nbins], binsRed[nbins];
+
+	for(int i=0; i<=(nbins-1); i++){
+		binsGreen[i]=0;
+		binsRed[i]=0;
+	}
+
 	int max_i;
 	vector<CStrain*>::iterator it;
+
 	for(it=allstrains.begin(); it!=allstrains.end(); it++){
-		cout<<(*it)->SubN<<"    "<<endl;
-		max_i=19*(*it)->maxFreq;	
-		for(int i=0; i<=max_i;i++){
-			bins[i]++;
+		//cout<<(*it)->maxFreq<<"    ";
+
+		if( 40.<=(*it)->crtime && (*it)->crtime<=80. /*&& (*it)->maxFreq > 0.1*/ ){
+
+			max_i=(nbins-1)*(*it)->maxFreq;
+
+			if(max_i==(nbins-1)){cerr<<(*it)->fixtime<<"   "<<(*it)->fixtime-(*it)->crtime<<endl;}
+
+			for(int i=0; i<=max_i; i++){
+				if ((*it)->mut_type==1){binsGreen[i]++;}
+				else {binsRed[i]++;}
+				//else cout << "ERROR"<<endl;
+			}
 		}
 	}
+	//cout << endl;
 	
-	for(int i=0; i<20;i++){
-		cout<<i/20.0<<"   "<<bins[i]<<endl;
+	for(int i=0; i<=(nbins-1); i++){
+		//cout<<binsRed[i]<<endl;
+		cout<<i/(nbins-1.)<<"   "<<log((double)binsGreen[i]/(double)binsGreen[0])/log(10.)<<"   "<<(double)binsGreen[i]/(double)binsGreen[0]<<"   "<<binsGreen[i]<<"   "<<log((double)binsRed[i]/(double)binsRed[0])/log(10.)<<"   "<<(double)binsRed[i]/(double)binsRed[0]<<"    "<<binsRed[i]<<endl;
 	}
 
 }
@@ -499,7 +529,8 @@ void Run(){
 }
 
 void finish(){
-	FreqDist();
+	cerr<<infperyear<<"   "/*<<iin*/<<endl;
+	//FreqDist();
 	delete top;
 }
 
