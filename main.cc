@@ -313,7 +313,6 @@ void Update_Immunes(){
 	}
 
 	//if (t>=40. && t<=41.) {iin++;}
-
 }
 
 double Diversity(){
@@ -334,7 +333,7 @@ double Diversity(){
 void Update(){
 	Immune_Selection();
 	if(iTime%inf_period==0) Genetic_Drift();
-	Mutations2();
+	Mutations();
 	Update_Immunes();
 	//trims the dead leaves
 	//if(iTime%10==0) top->trim(); not necessary!
@@ -344,13 +343,14 @@ void Update(){
 
 void output(ostream &out){
 	
+	/*
 	vector<CStrain*>::iterator it; 
 
 	double totalN=top->calSubN();
 
 	for(it=allstrains.begin(); it!=allstrains.end(); it++){
 		(*it)->setFreq((*it)->SubN/totalN,t);
-	}	
+	}*/	
 	
 	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
 	out << CStrain::max_dist<<"    ";

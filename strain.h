@@ -131,7 +131,7 @@ void CStrain::setFreq(double f,double tt){
 //sumN[rmax] is the sum of N's of all strains at distance rmax
 double CStrain::WeightedSumM0(double chi(double), double distance, CStrain *exclude){
 	if(distance>=rmax) return 0;
-	if(distance>max_dist)max_dist=distance;
+	//if(distance>max_dist)max_dist=distance;
 	double weightedsum=chi(distance)*accN;
 
 	
