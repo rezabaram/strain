@@ -435,7 +435,7 @@ void FreqDist(){
 	}
 
 	for(int i=0; i<=(timeend-timestart-1); i++){
-		//cout<<i+1<<"   "<<fixperyear[i]<<"   "<<endl;
+		cout<<i+1<<"   "<<fixperyear[i]<<"   "<<endl;
 	}
 
 	for(int i=0; i<maxmut; i++){
@@ -443,7 +443,6 @@ void FreqDist(){
 		if(fixdist[i]!=0){
 		cerr<<i<<"   "<<fixdist[i]<<"   "<<endl;
 		}
-		cerr<<i<<"   "<<fixdist[i]<<"   "<<endl;
 	}	
 
 	cerr<<"Mean"<<"   "<<(double)mean/(double)(timeend-timestart)<<endl;
@@ -453,6 +452,17 @@ void FreqDist(){
 		//cout<<binsRed[i]<<endl;
 		cout<<i/(nbins-1.)<<"   "<<log((double)binsGreen[i]/(double)binsGreen[0])/log(10.)<<"   "<<(double)binsGreen[i]/(double)binsGreen[0]<<"   "<<binsGreen[i]<<"   "<<log((double)binsRed[i]/(double)binsRed[0])/log(10.)<<"   "<<(double)binsRed[i]/(double)binsRed[0]<<"    "<<binsRed[i]<<"   "<<log((double)binsBlue[i]/(double)binsBlue[0])/log(10.)<<"   "<<(double)binsBlue[i]/(double)binsBlue[0]<<"    "<<binsBlue[i]<<endl;
 	}
+	cout<<endl;
+
+	for(int i=0; i<=(nbins-1); i++){
+		cout<<i/(nbins-1.)<<"   "<< log((double)binsGreen[i]/(double)binsGreen[0]/((double)binsBlue[i]/(double)binsBlue[0]))/log(10.)<<"   "<<log((double)binsRed[i]/(double)binsRed[0]/((double)binsBlue[i]/(double)binsBlue[0]))/log(10.)<<endl;
+	}
+	cout<<endl;
+
+	for(int i=0; i<=(nbins-1); i++){
+		cout<<i/(nbins-1.)<<"   "<< (double)binsGreen[i]/(double)binsGreen[0]/((double)binsBlue[i]/(double)binsBlue[0])<<"   "<<(double)binsRed[i]/(double)binsRed[0]/((double)binsBlue[i]/(double)binsBlue[0])<<endl;
+	}
+
 
 }
 
