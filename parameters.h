@@ -1,7 +1,7 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-const double Cf=3.75;
+const double Cf=5.;
 const double cp=0.015;
 size_t rmax=10;
 const int N0=10;
@@ -16,7 +16,7 @@ const double beta=R0*nu;
 const double f0=nu*(R0-1.); // beta-nu 1.7
 const double beta0=beta/(Npop*(beta-nu)); // 0.00001/f0
 const double dt=1./(365.);
-const double tMax=50.;
+const double tMax=38.999;
 const int nbins=100;
 const int timestart=1;
 const int timeend=41;

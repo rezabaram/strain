@@ -42,16 +42,16 @@ double mutants=0.;
 
 double A=2./10.; //lower asymptote
 double K=1.; //upper asymptote
-double B=9./2.;
+double B=3./2.;
 double Q=5./3.;
 double d0=4.;
 
 double chi_at_d(double d){
 	double chi;
-	chi=4./((double)d+4.);
+	//chi=4./((double)d+4.);
 	//chi=1.;
 
-	//chi = A + (K-A)/(1.+Q*exp(B*(d-d0)));
+	chi = A + (K-A)/(1.+Q*exp(B*(d-d0)));
 	return chi;
 }
 
@@ -249,7 +249,9 @@ void Mutate(CStrain *pfather){
 
 	CStrain *ps = new CStrain(stotal,pfather,dist);
 
-	if(ii==0) {ps->red_m++; ps->mut_type = 0; } //red
+	if(ii==0) {ps->red_m++; ps->mut_type = 0; 
+		//if(unif(eng)<1./10. && ps->red_m>=1) {ps->red_m=ps->red_m-1; /*cerr<<"backward mutation"<<endl;*/}
+	} //red
 	if(ii==1) {ps->mut_type = 1;} //green
 	if(ii==2) {ps->mut_type = 2;} //blue
 	if(ii<0) {cerr<<"Error in Mutate function"<<endl;}
@@ -324,7 +326,7 @@ void Update_Immunes(){
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
 		(*it)->accN+=nu*dt*(*it)->N;
-		if (t>=40. && t<=41.) {infperyear+=nu*dt*(*it)->N;}
+		infperyear+=nu*dt*(*it)->N;
 	}
 
 	//if (t>=40. && t<=41.) {iin++;}
@@ -380,10 +382,10 @@ void output(ostream &out){
 void FreqDist(){
 	double binsGreen[nbins], binsRed[nbins], binsBlue[nbins];
 	
-	int fixperyear[timeend-timestart];
+	int fixperyear[(int)tMax+1/*timeend-timestart*/];
 	int fixdist[maxmut];
 	
-	for(int i=0; i<=(timeend-timestart-1); i++){
+	for(int i=0; i<=(int)tMax; i++){
 		fixperyear[i]=0;
 	}
 
@@ -405,15 +407,15 @@ void FreqDist(){
 	for(it=allstrains.begin(); it!=allstrains.end(); it++){
 		//cout<<(*it)->maxFreq<<"    ";
 
-		if( (double)timestart<=(*it)->crtime && (*it)->crtime<=(double)timeend /*&& (*it)->maxFreq > 0.1*/ ){
+		//if( (double)timestart<=(*it)->crtime && (*it)->crtime<=(double)timeend /*&& (*it)->maxFreq > 0.1*/ ){
 			//cerr<<(*it)->red_m<<"   ";
 			max_i=(nbins-1)*(*it)->maxFreq;
 
 			if(max_i==(nbins-1)){
 				//cout<<(*it)->mut_type<<"   "<<(*it)->fixtime<<"   "<<(*it)->fixtime-(*it)->crtime<<endl;
 				timetofix+=(*it)->fixtime-(*it)->crtime;
-				ynum=(*it)->fixtime-timestart;
-				fixperyear[ynum-1]++;
+				ynum=(*it)->fixtime;//-timestart;
+				fixperyear[ynum/*-1*/]++;
 			}
 
 			for(int i=0; i<=max_i; i++){
@@ -423,19 +425,19 @@ void FreqDist(){
 				//else cerr<<"Error in the FreqDist function"<<endl;
 				//else cout << "ERROR"<<endl;
 			}
-		}
+		//}
 	}
 	//cout << endl;
 
 	int mean=0;
 
-	for(int i=0; i<=(timeend-timestart-1); i++){
+	for(int i=0; i<=(int)tMax; i++){
 		//cerr<<fixperyear[i]<<"   "<<endl;
 		fixdist[fixperyear[i]]++;
 	}
 
-	for(int i=0; i<=(timeend-timestart-1); i++){
-		cout<<i+1<<"   "<<fixperyear[i]<<"   "<<endl;
+	for(int i=0; i<=(int)tMax; i++){
+		cout<<i<<"   "<<fixperyear[i]<<"   "<<endl;
 	}
 
 	for(int i=0; i<maxmut; i++){
@@ -445,7 +447,7 @@ void FreqDist(){
 		}
 	}	
 
-	cerr<<"Mean"<<"   "<<(double)mean/(double)(timeend-timestart)<<endl;
+	cerr<<"Mean"<<"   "<<(double)mean/tMax<<endl;
 	cerr<<"Lifetime"<<"   "<<timetofix/(binsBlue[nbins-1]+binsGreen[nbins-1]+binsRed[nbins-1])<<endl;
 	
 	for(int i=0; i<=(nbins-1); i++){
