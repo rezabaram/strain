@@ -498,6 +498,13 @@ void print_N(ostream &out){
 	out << endl;
 }
 
+void print_recovered(ostream &out){
+
+	out << t <<"    "<<infperyear<<endl;
+	infperyear=0.;
+}
+
+
 ofstream singleouts[Nfiles];
 
 void PrintSingleInfected(){
@@ -548,6 +555,7 @@ void Run(){
 	ofstream out("out");
 	ofstream outdiv("diversity");
 	ofstream outfit("fitness");
+	ofstream outrecovered("recovered");
 	ofstream outN("N");
 	int s=0;
 	for(size_t i=0; i<Nfiles; i++){
@@ -576,6 +584,9 @@ void Run(){
 		logtime<<timer.read()<<"   "<<t<<endl;
 		t=iTime*dt;
 		Update();
+
+		if( iTime%365==0 ) print_recovered(outrecovered);
+
 		if(strains.size()==0) {
 			output_graphic_tree();
 			break;
