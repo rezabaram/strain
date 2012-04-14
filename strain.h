@@ -28,6 +28,7 @@ class CStrain{
 	void get_diversity2(double &div, size_t distance=0, CStrain *exclude=NULL);
 	double WeightedSumM0(double chi(double), double distance=0, CStrain *exclude=NULL);
 	double WeightedSumM(double chi(double), double distance=0, CStrain *exclude=NULL);
+	void calSubMeanFitness(double &sumfitness, double &totaln);
 	double calSubN();
 	void setFreq(double f,double tt);
 	void print(ostream &out);
@@ -273,6 +274,17 @@ void CStrain::trim_links(){
                 is_leaf=true;
                  if(links.size()>1) color=2;//color for dead branch
        }
+}
+
+void CStrain::calSubMeanFitness(double &sumfitness, double &totaln){
+	if(dead) return;
+	sumfitness+=fitness;
+	totaln++;
+	std::vector<CLink<CStrain> >::iterator it;
+	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
+		(*it).head->calSubMeanFitness(sumfitness,totaln);
+	}
+	
 }
 
 double CStrain::calSubN(){
