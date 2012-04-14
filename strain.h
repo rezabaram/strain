@@ -42,6 +42,7 @@ class CStrain{
 	double accN;
 	double fitness;
 	unsigned int red_m;
+	double cost;
 	double N;
 	int ID;
 	double crtime;
@@ -82,12 +83,14 @@ CStrain::CStrain(int i, CStrain *f, double im_d){
 	SubN=0.;
 	Freq=0.;
 	maxFreq=0.;
+	cost=0.;
 	notfixed=true;
 	red_m=0;
 	if(f!=NULL){
 		f->add_neighbour(this, 1, im_d);
 		f->add_link(this,1, im_d);
 		red_m=f->red_m;
+		cost=f->cost;
 	}
 	add_neighbour(f,1, im_d);
 	add_link(f,1, im_d);

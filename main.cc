@@ -173,6 +173,7 @@ void Initial_Conditions(){
 	top->M0=0.;
 	top->crtime=t;
 	top->mut_type=1;
+	top->cost=0.;
 	strains.push_back(top);
 	allstrains.push_back(top);
 	//define_cross_im();
@@ -186,20 +187,41 @@ double Nall(){
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
 		//cerr << (*it)->N << endl;
-		
 		assert((*it)->N>0);
 		sumAllN+=(*it)->N;	
 	}
 	return sumAllN;	
 }
 
+double average_red_m(){
+	double av_red_m=0.;
+
+	list<CStrain*>::iterator it;
+	for(it=strains.begin(); it!=strains.end(); it++){
+		av_red_m+=(*it)->red_m;
+	}
+	return av_red_m/strains.size();	
+}
+
+double average_cost(){
+	double av_cost=0.;
+
+	list<CStrain*>::iterator it;
+	for(it=strains.begin(); it!=strains.end(); it++){
+		av_cost+=(*it)->cost;
+	}
+	return av_cost/strains.size();	
+}
+
+
 void Immune_Selection(){
 	list<CStrain*>::iterator it;
 	//applying to all strains
 	for(it=strains.begin(); it!=strains.end(); it++){
-		CStrain *s=(*it);
+		CStrain *s=(*it); 
 		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
-		s->fitness=f0*(1-beta0*s->M0*Nall()*cp) - s->red_m*Cf;
+		//s->fitness=f0*(1-beta0*s->M0*Nall()*cp) - s->red_m*Cf;
+		s->fitness=f0*(1-beta0*s->M0*Nall()*cp) - s->cost;
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 	}
 }
@@ -236,6 +258,8 @@ void Genetic_Drift(){
 
 }
 
+ofstream outdist("dist.dat");
+
 void Mutate(CStrain *pfather){
 
 	double dist;
@@ -249,8 +273,22 @@ void Mutate(CStrain *pfather){
 
 	CStrain *ps = new CStrain(stotal,pfather,dist);
 
-	if(ii==0) {ps->red_m++; ps->mut_type = 0; 
-		//if(unif(eng)<1./10. && ps->red_m>=1) {ps->red_m=ps->red_m-1; /*cerr<<"backward mutation"<<endl;*/}
+	if(ii==0) { 
+		//ps->cost+=Cf;
+		ps->mut_type = 0;
+		std::tr1::exponential_distribution<double> exponential(1./Cf);
+		double rnd = exponential(eng);
+		//outdist << rnd<<endl;
+		if(unif(eng)<(160.-ps->red_m/*average_red_m()*/)/160.) {
+			ps->red_m++;
+			ps->cost+=rnd;
+		}
+		else {//if(ps->red_m>=1 && ps->cost>0.){
+			ps->red_m=ps->red_m-1;
+			if(ps->cost>=rnd) ps->cost=ps->cost-rnd;
+			else ps->cost=0.;
+			//}
+		}
 	} //red
 	if(ii==1) {ps->mut_type = 1;} //green
 	if(ii==2) {ps->mut_type = 2;} //blue
@@ -271,6 +309,7 @@ void Mutate(CStrain *pfather){
 	allstrains.push_back(ps);
 
 	stotal++;
+
 }
 
 void Mutations(){
@@ -368,8 +407,10 @@ void output(ostream &out){
 	for(it=allstrains.begin(); it!=allstrains.end(); it++){
 		(*it)->setFreq((*it)->SubN/totalN,t);
 	}	
-	
-	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< mut_rate <<"    ";
+
+		
+
+	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< average_red_m() <<"    "<< average_cost() <<"    ";
 	out << CStrain::max_dist<<"    ";
 	out << Diversity() <<"   ";
 	out << Nall() <<"    ";
@@ -382,7 +423,7 @@ void output(ostream &out){
 void FreqDist(){
 	double binsGreen[nbins], binsRed[nbins], binsBlue[nbins];
 	
-	int fixperyear[(int)tMax+1/*timeend-timestart*/];
+	int fixperyear[(int)tMax+1];
 	int fixdist[maxmut];
 	
 	for(int i=0; i<=(int)tMax; i++){
@@ -414,8 +455,9 @@ void FreqDist(){
 			if(max_i==(nbins-1)){
 				//cout<<(*it)->mut_type<<"   "<<(*it)->fixtime<<"   "<<(*it)->fixtime-(*it)->crtime<<endl;
 				timetofix+=(*it)->fixtime-(*it)->crtime;
-				ynum=(*it)->fixtime;//-timestart;
-				fixperyear[ynum/*-1*/]++;
+				ynum=(*it)->fixtime;
+				fixperyear[ynum]++;
+				if( (*it)->mut_type==0){ cerr << (*it)->fixtime <<"   "<< (*it)->cost << endl;}
 			}
 
 			for(int i=0; i<=max_i; i++){
@@ -427,6 +469,8 @@ void FreqDist(){
 			}
 		//}
 	}
+	cerr << endl;
+	cerr << endl;
 	//cout << endl;
 
 	int mean=0;

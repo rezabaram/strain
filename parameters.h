@@ -1,7 +1,14 @@
+// if Cf is small (ex. 0.1) then all mutations get fixed and the dynamics goes to extinction very slowly
+// if Cf is bigger then dynamics goes to extinction quite fast
+// if Cf is very big then there are no fixations
+
+// if Cf is dist and small (ex. 0.1) then all mutations get fixed and the dynamics goes to extinction very slowly
+// 1334441118 Cf=1.5, cp=0.015
+
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-const double Cf=5.;
+const double Cf=1.5;
 const double cp=0.015;
 size_t rmax=10;
 const int N0=10;
@@ -16,8 +23,8 @@ const double beta=R0*nu;
 const double f0=nu*(R0-1.); // beta-nu 1.7
 const double beta0=beta/(Npop*(beta-nu)); // 0.00001/f0
 const double dt=1./(365.);
-const double tMax=38.999;
-const int nbins=100;
+const double tMax=77.999;//38.999;
+const int nbins=10;
 const int timestart=1;
 const int timeend=41;
 const int maxmut=1000;
