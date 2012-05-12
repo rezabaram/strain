@@ -257,6 +257,7 @@ double CStrain::WeightedSumM(double chi(double) ){
 void CStrain::die(){
 	assert(!dead);
 	N=0.0;
+	fitness=0.0;
 	dead=true;
 	color=1;
 }
@@ -277,9 +278,10 @@ void CStrain::trim_links(){
 }
 
 void CStrain::calSubMeanFitness(double &sumfitness, double &totaln){
-	if(dead) return;
-	sumfitness+=fitness;
-	totaln++;
+	if(!dead) {
+		sumfitness+=fitness;
+		totaln++;
+	}
 	std::vector<CLink<CStrain> >::iterator it;
 	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
 		(*it).head->calSubMeanFitness(sumfitness,totaln);

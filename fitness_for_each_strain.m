@@ -11,6 +11,6 @@ filename=['line',int2str(j)]
 a=load(filename);
 
 figure(1)
-plot( a(2:end) , '--rs','LineWidth',2, 'MarkerEdgeColor','k', 'MarkerFaceColor','g', 'MarkerSize',10)
+plot( a(3:end) , '--rs','LineWidth',2, 'MarkerEdgeColor','k', 'MarkerFaceColor','g', 'MarkerSize',10)
 
 end

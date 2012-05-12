@@ -2,8 +2,8 @@ clear all
 
 % plots fitness or N distribution for each time step
 
-init_file=6570;
-num_files=6935; %79027; % fitness shifted1overd
+init_file=15000; %365 files = 365 days
+num_files=22000; %79027; % fitness shifted1overd
 
 for j=init_file:1:num_files % number of lines in the file "fitness"
 
@@ -17,7 +17,7 @@ s=1;
 
 clear nonzero_fitness
 
-for i=2:1:length(a)
+for i=3:1:length(a)
     if(a(i)~=0)    
         nonzero_fitness(s)=a(i);
         s=s+1;
@@ -47,7 +47,7 @@ s=1;
 
 clear nonzero_fitness
 
-for i=2:1:length(a)
+for i=3:1:length(a)
     if(a(i)~=0)    
         nonzero_fitness(s)=a(i);
         s=s+1;
@@ -64,7 +64,7 @@ end
 
 h=figure(1)
 bar(bins,n);
-title('mean fitness distribution for 18 years < t < 19 years');
+title('fitness distribution averaged over 19 years');
 xlabel('fitness values');
 ylabel('counts');
 

@@ -35,8 +35,8 @@ double t;
 unsigned int iTime=0;
 //Cross immunity matrix
 double *chi;
-const unsigned int Nfiles=1;//1000;
-const int IDstart=1;//62300;
+const unsigned int Nfiles=1000;
+const int IDstart=40000;
 double mtotal=0.;
 double mutants=0.;
 
@@ -240,6 +240,7 @@ void Genetic_Drift(){
 
 		if(rnd<1) {
 			//cerr << "random number smaller than 1" << "    " << rnd << "    " << endl;
+			//cout<<(*it)->fitness<<endl;
 			(*it)->die();
 			//this also sets "it" to next value
 			it=strains.erase(it);
@@ -348,6 +349,7 @@ void Mutations2(){
 		for(int i=1; i<=num_mutants; i++){
                 	Mutate(*it);
         		if((*it)->N<1) {
+				//cout<<(*it)->fitness<<endl;
                 		(*it)->die();
                 		//this also sets "it" to next value
                 		it=strains.erase(it);
@@ -420,6 +422,7 @@ void output(ostream &out){
 
 }
 
+
 void FreqDist(){
 	double binsGreen[nbins], binsRed[nbins], binsBlue[nbins];
 	
@@ -446,6 +449,7 @@ void FreqDist(){
 	double timetofix=0.;
 
 	for(it=allstrains.begin(); it!=allstrains.end(); it++){
+		//cout<<(*it)->fitness<<endl;
 		//cout<<(*it)->maxFreq<<"    ";
 
 		//if( (double)timestart<=(*it)->crtime && (*it)->crtime<=(double)timeend /*&& (*it)->maxFreq > 0.1*/ ){
@@ -454,6 +458,7 @@ void FreqDist(){
 
 			if(max_i==(nbins-1)){
 				//cout<<(*it)->mut_type<<"   "<<(*it)->fixtime<<"   "<<(*it)->fixtime-(*it)->crtime<<endl;
+				//cerr << (*it)->ID << endl;
 				timetofix+=(*it)->fixtime-(*it)->crtime;
 				ynum=(*it)->fixtime;
 				fixperyear[ynum]++;
@@ -524,9 +529,16 @@ void print_fitness(ostream &out){
 
 	list<CStrain*>::iterator it;
 
+	double mean_fitness=0.;
+
 	for(it=strains.begin(); it!=strains.end(); it++){
-		out << (*it)->fitness <<"    ";
+		mean_fitness+=(*it)->fitness;
 	}
+
+	for(it=strains.begin(); it!=strains.end(); it++){
+		out << mean_fitness/strains.size() <<"    "<< (*it)->fitness <<"    ";
+	}
+
 	out << endl;
 }
 
@@ -553,9 +565,20 @@ ofstream singleouts[Nfiles];
 
 void PrintSingleInfected(){
 	list<CStrain*>::iterator it;
+
+	double mean_fitness=0.;
+
+	for(it=strains.begin(); it!=strains.end(); it++){
+		mean_fitness+=(*it)->fitness;
+	}
+
 	for(it=strains.begin(); it!=strains.end(); it++){
 		if((*it)->ID<(int)Nfiles+IDstart and (*it)->ID>=IDstart){
-			singleouts[(*it)->ID-IDstart]<< t<< "    " <<(*it)->N << "    " << (*it)->fitness << endl;
+
+			double sumf=0., nn=0.;
+			(*it)->calSubMeanFitness(sumf, nn);
+
+			singleouts[(*it)->ID-IDstart]<< t<< "    " <<(*it)->N << "    " << (*it)->fitness << "    " << mean_fitness/strains.size() << "     " << sumf/nn <<  "    " << (mean_fitness-sumf)/(strains.size()-nn) << endl;
 		}
 	}
 }

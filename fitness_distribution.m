@@ -2,10 +2,10 @@ clear all
 
 % plots fitness or N distribution for each time step
 
-init_file=6570;
-num_files=6590;%6935; 
+init_file=1;
+num_files=22000;%6935; 
 
-for j=init_file:1:num_files % number of lines in the file "fitness"
+for j=init_file:10:num_files % number of lines in the file "fitness"
 
 filename=['line',int2str(j)]
 
@@ -17,7 +17,7 @@ s=1;
 
 clear nonzero_fitness
 
-for i=2:1:length(a)
+for i=3:1:length(a)
     if(a(i)~=0)    
         nonzero_fitness(s)=a(i);
         s=s+1;
@@ -34,7 +34,7 @@ min_fitness=min(least_fit);
 
 bins=min_fitness:(max_fitness-min_fitness)/100:max_fitness;
 
-for j=init_file:1:num_files % number of lines in the file "fitness"
+for j=init_file:10:num_files % number of lines in the file "fitness"
 
 filename=['line',int2str(j)]
 
@@ -46,7 +46,7 @@ s=1;
 
 clear nonzero_fitness
 
-for i=2:1:length(a)
+for i=3:1:length(a)
     if(a(i)~=0)    
         nonzero_fitness(s)=a(i);
         s=s+1;
@@ -60,7 +60,7 @@ set(gca,'nextplot','replacechildren');
 title(sprintf('file name %s, fitness distribution for t=%g years',filename,a(1)))
 xlabel('fitness values')
 ylabel('counts')
-saveas(h,['fitness_distribution_snapshot',int2str(j-init_file+1),'.fig'])
+%saveas(h,['fitness_distribution_snapshot',int2str(j-init_file+1),'.fig'])
 Mov(j-init_file+1)=getframe(); 
 
 

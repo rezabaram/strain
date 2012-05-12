@@ -8,7 +8,7 @@
 #ifndef PARAMETERS_H
 #define PARAMETERS_H
 
-const double Cf=1.5;
+const double Cf=5.0;
 const double cp=0.015;
 size_t rmax=10;
 const int N0=10;
