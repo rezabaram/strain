@@ -277,14 +277,14 @@ void CStrain::trim_links(){
        }
 }
 
-void CStrain::calSubMeanFitness(double &sumfitness, double &totaln){
+void CStrain::calSubMeanFitness(double &weightedsumfitness, double &subtreeN){
 	if(!dead) {
-		sumfitness+=fitness;
-		totaln++;
+		weightedsumfitness+=fitness*N;
+		subtreeN+=N;
 	}
 	std::vector<CLink<CStrain> >::iterator it;
 	for(it=neighbours.begin(), it++; it!=neighbours.end(); it++){
-		(*it).head->calSubMeanFitness(sumfitness,totaln);
+		(*it).head->calSubMeanFitness(weightedsumfitness,subtreeN);
 	}
 	
 }

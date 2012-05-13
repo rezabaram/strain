@@ -3,7 +3,7 @@ clear all
 % plots fitness or N distribution for each time step
 
 init_file=1;
-num_files=22000;%6935; 
+num_files=28469; 
 
 for j=init_file:10:num_files % number of lines in the file "fitness"
 
@@ -11,21 +11,8 @@ filename=['line',int2str(j)]
 
 a=load(filename);
 
-%time(j)=a(1);
-
-s=1;
-
-clear nonzero_fitness
-
-for i=3:1:length(a)
-    if(a(i)~=0)    
-        nonzero_fitness(s)=a(i);
-        s=s+1;
-    end
-end
-
-most_fit(j)=max( nonzero_fitness );
-least_fit(j)=min( nonzero_fitness );
+most_fit(j)=max( a(3:end)-a(2) );
+least_fit(j)=min( a(3:end)-a(2) );
 
 end
 

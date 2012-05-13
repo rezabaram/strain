@@ -190,46 +190,52 @@ void Initial_Conditions(){
 //create a new strain through mutation
 //and add to the list
 double Nall(){
-	double sumAllN=0.;
+	double Ntot=0.;
 
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
 		//cerr << (*it)->N << endl;
 		assert((*it)->N>0);
-		sumAllN+=(*it)->N;	
+		Ntot+=(*it)->N;	
 	}
-	return sumAllN;	
+	return Ntot;	
 }
 
 double average_red_m(){
 	double av_red_m=0.;
+	double Ntot=Nall();
 
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		av_red_m+=(*it)->red_m;
+		av_red_m+=(*it)->red_m*(*it)->N/Ntot;
 	}
-	return av_red_m/strains.size();	
+
+	return av_red_m;	
 }
 
 double average_cost(){
 	double av_cost=0.;
+	double Ntot=Nall();	
 
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		av_cost+=(*it)->cost;
+		av_cost+=(*it)->cost*(*it)->N/Ntot;
 	}
-	return av_cost/strains.size();	
+	return av_cost;	
 }
 
 
 void Immune_Selection(){
 	list<CStrain*>::iterator it;
 	//applying to all strains
+
+	double Ntot=Nall();
+
 	for(it=strains.begin(); it!=strains.end(); it++){
 		CStrain *s=(*it); 
 		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
 		//s->fitness=f0*(1-beta0*s->M0*Nall()*cp) - s->red_m*Cf;
-		s->fitness=f0*(1-beta0*s->M0*Nall()*cp) - s->cost;
+		s->fitness=f0*(1-beta0*s->M0*Ntot*cp) - s->cost;
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 	}
 }
@@ -288,7 +294,7 @@ void Mutate(CStrain *pfather){
 		std::tr1::exponential_distribution<double> exponential(1./Cf);
 		double rnd = exponential(eng);
 
-		if(unif(eng)<(160.-ps->red_m/*average_red_m()*/)/160.) {
+		if(unif(eng)<(160.-ps->red_m)/160.) {
 			ps->red_m++;
 			ps->cost+=rnd;
 		}
@@ -384,15 +390,14 @@ void Update_Immunes(){
 double Diversity(){
 	list<CStrain*>::iterator it;
 	double diversity=0.;
-	double sumAllN=0.;
+	double Ntot=Nall();
 	for(it=strains.begin(); it!=strains.end(); it++){
 		double div=0;
 		(*it)->get_diversity2(div,0,(*it));
 		//(*it)->get_diversity(div);
 		diversity+=(*it)->N*div;
-		sumAllN+=(*it)->N;
 	}
-	diversity=diversity/2./(sumAllN*sumAllN);
+	diversity=diversity/2./(Ntot*Ntot);
 	return diversity;
 }
 
@@ -522,15 +527,17 @@ void print_fitness(ostream &out){
 	out << t << "    ";
 
 	list<CStrain*>::iterator it;
-
+	double Ntot=Nall();
 	double mean_fitness=0.;
 
 	for(it=strains.begin(); it!=strains.end(); it++){
-		mean_fitness+=(*it)->fitness;
+		mean_fitness+=(*it)->fitness*(*it)->N/Ntot;
 	}
 
+	out << mean_fitness << "    ";
+
 	for(it=strains.begin(); it!=strains.end(); it++){
-		out << mean_fitness/strains.size() << "    " << (*it)->fitness << "    ";
+		out << (*it)->fitness << "    ";
 	}
 
 	out << endl;
@@ -558,21 +565,25 @@ void print_recovered(ostream &out){
 ofstream singleouts[Nfiles];
 
 void PrintSingleInfected(){
-	list<CStrain*>::iterator it;
 
+	list<CStrain*>::iterator it;
+	double Ntot=Nall();
 	double mean_fitness=0.;
 
 	for(it=strains.begin(); it!=strains.end(); it++){
-		mean_fitness+=(*it)->fitness;
+		mean_fitness+=(*it)->fitness*(*it)->N/Ntot;
 	}
 
 	for(it=strains.begin(); it!=strains.end(); it++){
 		if((*it)->ID<(int)Nfiles+IDstart and (*it)->ID>=IDstart){
 
-			double sumf=0., nn=0.;
-			(*it)->calSubMeanFitness(sumf, nn);
+			double weighsumf=0., subtrN=0.;
+			(*it)->calSubMeanFitness(weighsumf, subtrN);
 
-			singleouts[(*it)->ID-IDstart] << t << "    " << strains.size() << "    " << nn << "    " << (*it)->N << "    " << (*it)->fitness << "    " << mean_fitness/strains.size() << "    " << sumf/nn << "    " << (mean_fitness-sumf)/(strains.size()-nn) << endl;
+			double mean_fitness_subtree=weighsumf/subtrN;
+			double mean_fitness_rest=(mean_fitness-mean_fitness_subtree*subtrN/Ntot)*Ntot/(Ntot-subtrN);
+
+			singleouts[(*it)->ID-IDstart] << t << "    " << strains.size() << "    " << subtrN << "    " << (*it)->N << "    " << (*it)->fitness << "    " << mean_fitness << "    " << mean_fitness_subtree << "    " << mean_fitness_rest << endl;
 		}
 	}
 }
@@ -654,18 +665,12 @@ void Run(){
 			break;
 		}
 		
-	
+		//if(iTime%(inf_period*7)==0 and t >= 20.)
+
 		PrintSingleInfected();
-		//if(iTime%200==0)
-
 		output(out);
-
-		//if(iTime%(inf_period*7)==0 and t >= 20.) 
 		print_diversity(outdiv);
-
-		//if(iTime%(inf_period*7)==0) 
 		print_fitness(outfit);
-
 		print_N(outN);
 
 		//if(iTime%200==0 and t <= 4.) output_graphic_tree();
