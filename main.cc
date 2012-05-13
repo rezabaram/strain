@@ -17,6 +17,13 @@ std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
 
 ofstream logtime("logtime");
+ofstream outfixtimes("FixTimes");
+ofstream outfixperyear("FixPerYear");
+ofstream outfixdist("FixDist");
+ofstream outmeanfixdist("MeanFixDist");
+ofstream outlifetime("LifeTime");
+ofstream outfractionspropagators("FractionsPropagators");
+ofstream outpropagators("Propagators");
 CTimer timer;
 
 CConfig config("config");
@@ -259,7 +266,7 @@ void Genetic_Drift(){
 
 }
 
-ofstream outdist("dist.dat");
+//ofstream outdist("dist.dat");
 
 void Mutate(CStrain *pfather){
 
@@ -279,7 +286,7 @@ void Mutate(CStrain *pfather){
 		ps->mut_type = 0;
 		std::tr1::exponential_distribution<double> exponential(1./Cf);
 		double rnd = exponential(eng);
-		//outdist << rnd<<endl;
+
 		if(unif(eng)<(160.-ps->red_m/*average_red_m()*/)/160.) {
 			ps->red_m++;
 			ps->cost+=rnd;
@@ -384,7 +391,7 @@ double Diversity(){
 		diversity+=(*it)->N*div;
 		sumAllN+=(*it)->N;
 	}
-	diversity=diversity/2/(sumAllN*sumAllN);
+	diversity=diversity/2./(sumAllN*sumAllN);
 	return diversity;
 }
 
@@ -401,25 +408,15 @@ void Update(){
 
 void output(ostream &out){
 	
-	
 	vector<CStrain*>::iterator it; 
 
 	double totalN=top->calSubN();
 
 	for(it=allstrains.begin(); it!=allstrains.end(); it++){
 		(*it)->setFreq((*it)->SubN/totalN,t);
-	}	
+	}
 
-		
-
-	out << t <<"    "<< CStrain::stotal <<"    "<< strains.size() <<"    "<< average_red_m() <<"    "<< average_cost() <<"    ";
-	out << CStrain::max_dist<<"    ";
-	out << Diversity() <<"   ";
-	out << Nall() <<"    ";
-	//out << mtotal << "    ";
-	//out << totalN;
-	out << endl;
-
+	out << t << "    " << CStrain::stotal << "    " << strains.size() << "    " << average_red_m() << "    " << average_cost() << "    " << CStrain::max_dist << "    " << Nall() << "    " << endl;
 }
 
 
@@ -457,12 +454,12 @@ void FreqDist(){
 			max_i=(nbins-1)*(*it)->maxFreq;
 
 			if(max_i==(nbins-1)){
-				//cout<<(*it)->mut_type<<"   "<<(*it)->fixtime<<"   "<<(*it)->fixtime-(*it)->crtime<<endl;
+				outfixtimes << (*it)->mut_type << "    " << (*it)->fixtime << "    " << (*it)->fixtime-(*it)->crtime << "    " << (*it)->cost << endl;
 				//cerr << (*it)->ID << endl;
 				timetofix+=(*it)->fixtime-(*it)->crtime;
 				ynum=(*it)->fixtime;
 				fixperyear[ynum]++;
-				if( (*it)->mut_type==0){ cerr << (*it)->fixtime <<"   "<< (*it)->cost << endl;}
+				//if( (*it)->mut_type==0){ cerr << (*it)->fixtime <<"   "<< (*it)->cost << endl;}
 			}
 
 			for(int i=0; i<=max_i; i++){
@@ -475,8 +472,6 @@ void FreqDist(){
 		//}
 	}
 	cerr << endl;
-	cerr << endl;
-	//cout << endl;
 
 	int mean=0;
 
@@ -486,46 +481,44 @@ void FreqDist(){
 	}
 
 	for(int i=0; i<=(int)tMax; i++){
-		cout<<i<<"   "<<fixperyear[i]<<"   "<<endl;
+		outfixperyear << i << "    " << fixperyear[i] << "    " << endl;
 	}
 
 	for(int i=0; i<maxmut; i++){
 		mean+=i*fixdist[i];
 		if(fixdist[i]!=0){
-		cerr<<i<<"   "<<fixdist[i]<<"   "<<endl;
+		outfixdist << i << "    " << fixdist[i] << "    " << endl;
 		}
 	}	
 
-	cerr<<"Mean"<<"   "<<(double)mean/tMax<<endl;
-	cerr<<"Lifetime"<<"   "<<timetofix/(binsBlue[nbins-1]+binsGreen[nbins-1]+binsRed[nbins-1])<<endl;
+	outmeanfixdist << (double)mean/tMax << endl;
+	outlifetime << timetofix/(binsBlue[nbins-1]+binsGreen[nbins-1]+binsRed[nbins-1]) << endl;
 	
 	for(int i=0; i<=(nbins-1); i++){
 		//cout<<binsRed[i]<<endl;
-		cout<<i/(nbins-1.)<<"   "<<log((double)binsGreen[i]/(double)binsGreen[0])/log(10.)<<"   "<<(double)binsGreen[i]/(double)binsGreen[0]<<"   "<<binsGreen[i]<<"   "<<log((double)binsRed[i]/(double)binsRed[0])/log(10.)<<"   "<<(double)binsRed[i]/(double)binsRed[0]<<"    "<<binsRed[i]<<"   "<<log((double)binsBlue[i]/(double)binsBlue[0])/log(10.)<<"   "<<(double)binsBlue[i]/(double)binsBlue[0]<<"    "<<binsBlue[i]<<endl;
+		outpropagators<<i/(nbins-1.)<<"   "<<log((double)binsGreen[i]/(double)binsGreen[0])/log(10.)<<"   "<<(double)binsGreen[i]/(double)binsGreen[0]<<"    "<<binsGreen[i]<<"    "<<log((double)binsRed[i]/(double)binsRed[0])/log(10.)<<"    "<<(double)binsRed[i]/(double)binsRed[0]<<"    "<<binsRed[i]<<"   "<<log((double)binsBlue[i]/(double)binsBlue[0])/log(10.)<<"   "<<(double)binsBlue[i]/(double)binsBlue[0]<<"    "<<binsBlue[i]<<endl;
 	}
-	cout<<endl;
+	//cout<<endl;
 
 	for(int i=0; i<=(nbins-1); i++){
-		cout<<i/(nbins-1.)<<"   "<< log((double)binsGreen[i]/(double)binsGreen[0]/((double)binsBlue[i]/(double)binsBlue[0]))/log(10.)<<"   "<<log((double)binsRed[i]/(double)binsRed[0]/((double)binsBlue[i]/(double)binsBlue[0]))/log(10.)<<endl;
+		outfractionspropagators<<i/(nbins-1.)<<"   "<< log((double)binsGreen[i]/(double)binsGreen[0]/((double)binsBlue[i]/(double)binsBlue[0]))/log(10.)<<"   "<<log((double)binsRed[i]/(double)binsRed[0]/((double)binsBlue[i]/(double)binsBlue[0]))/log(10.)<<endl;
 	}
-	cout<<endl;
+	//cout<<endl;
 
 	for(int i=0; i<=(nbins-1); i++){
-		cout<<i/(nbins-1.)<<"   "<< (double)binsGreen[i]/(double)binsGreen[0]/((double)binsBlue[i]/(double)binsBlue[0])<<"   "<<(double)binsRed[i]/(double)binsRed[0]/((double)binsBlue[i]/(double)binsBlue[0])<<endl;
+		outfractionspropagators<<i/(nbins-1.)<<"   "<< (double)binsGreen[i]/(double)binsGreen[0]/((double)binsBlue[i]/(double)binsBlue[0])<<"   "<<(double)binsRed[i]/(double)binsRed[0]/((double)binsBlue[i]/(double)binsBlue[0])<<endl;
 	}
 
 
 }
 
 void print_diversity(ostream &out){
-	out << t <<"    ";
-	out << Diversity() <<"    ";
-	out << endl;
+	out << t << "    " << Diversity() << "    " << endl;
 }
 
 void print_fitness(ostream &out){
 
-	out << t <<"    ";
+	out << t << "    ";
 
 	list<CStrain*>::iterator it;
 
@@ -536,7 +529,7 @@ void print_fitness(ostream &out){
 	}
 
 	for(it=strains.begin(); it!=strains.end(); it++){
-		out << mean_fitness/strains.size() <<"    "<< (*it)->fitness <<"    ";
+		out << mean_fitness/strains.size() << "    " << (*it)->fitness << "    ";
 	}
 
 	out << endl;
@@ -549,14 +542,14 @@ void print_N(ostream &out){
 	list<CStrain*>::iterator it;
 
 	for(it=strains.begin(); it!=strains.end(); it++){
-		out << (*it)->N <<"    ";
+		out << (*it)->N << "    ";
 	}
 	out << endl;
 }
 
 void print_recovered(ostream &out){
 
-	out << t <<"    "<<infperyear<<endl;
+	out << t << "    " << infperyear << endl;
 	infperyear=0.;
 }
 
@@ -578,7 +571,7 @@ void PrintSingleInfected(){
 			double sumf=0., nn=0.;
 			(*it)->calSubMeanFitness(sumf, nn);
 
-			singleouts[(*it)->ID-IDstart]<< t<< "    " <<(*it)->N << "    " << (*it)->fitness << "    " << mean_fitness/strains.size() << "     " << sumf/nn <<  "    " << (mean_fitness-sumf)/(strains.size()-nn) << endl;
+			singleouts[(*it)->ID-IDstart] << t << "    " << strains.size() << "    " << nn << "    " << (*it)->N << "    " << (*it)->fitness << "    " << mean_fitness/strains.size() << "    " << sumf/nn << "    " << (mean_fitness-sumf)/(strains.size()-nn) << endl;
 		}
 	}
 }
@@ -654,10 +647,12 @@ void Run(){
 
 		if( iTime%365==0 ) print_recovered(outrecovered);
 
+		/*
 		if(strains.size()==0) {
 			output_graphic_tree();
 			break;
 		}
+		*/
 	
 		PrintSingleInfected();
 		//if(iTime%200==0)
@@ -665,7 +660,7 @@ void Run(){
 		output(out);
 
 		//if(iTime%(inf_period*7)==0 and t >= 20.) 
-		//print_diversity(outdiv);
+		print_diversity(outdiv);
 
 		//if(iTime%(inf_period*7)==0) 
 		print_fitness(outfit);
@@ -677,7 +672,7 @@ void Run(){
 }
 
 void finish(){
-	cerr<<infperyear<<"   "/*<<iin*/<<endl;
+	//cerr<<infperyear<<"   "/*<<iin*/<<endl;
 	FreqDist();
 	delete top;
 }
