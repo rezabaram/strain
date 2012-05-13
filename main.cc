@@ -171,7 +171,8 @@ void Initial_Conditions(){
 	cerr<< "Seed: "<<seed <<endl;
 	eng.seed(seed);
 	//eng.seed(10);
-	rmax=config.get_param<size_t>("rmax");
+	rmax=10;
+	//rmax=config.get_param<size_t>("rmax");
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
@@ -647,12 +648,12 @@ void Run(){
 
 		if( iTime%365==0 ) print_recovered(outrecovered);
 
-		/*
+		
 		if(strains.size()==0) {
-			output_graphic_tree();
+			//output_graphic_tree();
 			break;
 		}
-		*/
+		
 	
 		PrintSingleInfected();
 		//if(iTime%200==0)
