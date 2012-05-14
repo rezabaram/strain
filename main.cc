@@ -430,14 +430,26 @@ void FreqDist(){
 	double binsGreen[nbins], binsRed[nbins], binsBlue[nbins];
 	
 	int fixperyear[(int)tMax+1];
+	int fixperyearred[(int)tMax+1];
+	int fixperyeargreen[(int)tMax+1];
+	int fixperyearblue[(int)tMax+1];
 	int fixdist[maxmut];
+	int fixdistred[maxmut];
+	int fixdistgreen[maxmut];
+	int fixdistblue[maxmut];
 	
 	for(int i=0; i<=(int)tMax; i++){
 		fixperyear[i]=0;
+		fixperyearred[i]=0;
+		fixperyeargreen[i]=0;
+		fixperyearblue[i]=0;
 	}
 
 	for(int i=0; i<maxmut; i++){
 		fixdist[i]=0;
+		fixdistred[i]=0;
+		fixdistgreen[i]=0;
+		fixdistblue[i]=0;
 	}
 
 	for(int i=0; i<=(nbins-1); i++){
@@ -465,7 +477,9 @@ void FreqDist(){
 				timetofix+=(*it)->fixtime-(*it)->crtime;
 				ynum=(*it)->fixtime;
 				fixperyear[ynum]++;
-				//if( (*it)->mut_type==0){ cerr << (*it)->fixtime <<"   "<< (*it)->cost << endl;}
+				if( (*it)->mut_type==0 ){ fixperyearred[ynum]++; }
+				else if ( (*it)->mut_type==1 ){ fixperyeargreen[ynum]++; }
+				else if ( (*it)->mut_type==2 ){ fixperyearblue[ynum]++; }
 			}
 
 			for(int i=0; i<=max_i; i++){
@@ -484,17 +498,20 @@ void FreqDist(){
 	for(int i=0; i<=(int)tMax; i++){
 		//cerr<<fixperyear[i]<<"   "<<endl;
 		fixdist[fixperyear[i]]++;
+		fixdistred[fixperyearred[i]]++;
+		fixdistgreen[fixperyeargreen[i]]++;
+		fixdistblue[fixperyearblue[i]]++;
 	}
 
 	for(int i=0; i<=(int)tMax; i++){
-		outfixperyear << i << "    " << fixperyear[i] << "    " << endl;
+		outfixperyear << i << "    " << fixperyear[i] << "    " << fixperyearred[i] << "    " << fixperyeargreen[i] << "    " << fixperyearblue[i] << "    " << endl;
 	}
 
 	for(int i=0; i<maxmut; i++){
 		mean+=i*fixdist[i];
-		if(fixdist[i]!=0){
-		outfixdist << i << "    " << fixdist[i] << "    " << endl;
-		}
+		//if(fixdist[i]!=0){
+		outfixdist << i << "    " << fixdist[i] << "    " << fixdistred[i] << "    " << fixdistgreen[i] << "    " << fixdistblue[i] << "    " << endl;
+		//}
 	}	
 
 	outmeanfixdist << (double)mean/tMax << endl;
