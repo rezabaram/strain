@@ -16,7 +16,10 @@ const double Npop=1e+6;
 const double R0=1.1;
 const unsigned int inf_period=4;
 const double nu=365.0/(double)inf_period; // units 1/year
-const int L=580;//120+160+300=580; 60 epitope codons, 80 non-epitope codons and 300 neutral sites
+const int Lep=120;
+const int Lnep=160;
+const int Lne=300;
+const int L=Lep+Lnep+Lne;//580;//120+160+300=580; 60 epitope codons, 80 non-epitope codons and 300 neutral sites
 const double mu=5.8*1e-3; // units 1/year
 double mut_rate=mu*L/365.;
 const double beta=R0*nu;

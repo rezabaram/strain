@@ -26,7 +26,7 @@ ofstream outfractionspropagators("FractionsPropagators");
 ofstream outpropagators("Propagators");
 CTimer timer;
 
-CConfig config("config");
+//CConfig config("config");
 
 
 using namespace std;
@@ -171,7 +171,7 @@ void Initial_Conditions(){
 	cerr<< "Seed: "<<seed <<endl;
 	eng.seed(seed);
 	//eng.seed(10);
-	rmax=10;
+	//rmax=10;
 	//rmax=config.get_param<size_t>("rmax");
 	stotal=0;
 	//creating the root node
@@ -282,8 +282,8 @@ void Mutate(CStrain *pfather){
 
 	double prob=unif(eng);
 
-	if(prob<=120./580.){ ii=1; dist=1.; } //green
-	else if(prob<=280./580.){ ii=0; dist=0.; } //red
+	if(prob<=(double)Lep/(double)L){ ii=1; dist=1.; } //green
+	else if(prob<=((double)Lep+(double)Lnep)/(double)L){ ii=0; dist=0.; } //red
 	else { ii=2; dist=0.; } //blue
 
 	CStrain *ps = new CStrain(stotal,pfather,dist);
@@ -294,7 +294,7 @@ void Mutate(CStrain *pfather){
 		std::tr1::exponential_distribution<double> exponential(1./Cf);
 		double rnd = exponential(eng);
 
-		if(unif(eng)<(160.-ps->red_m)/160.) {
+		if(unif(eng)<((double)Lnep-ps->red_m)/(double)Lnep) {
 			ps->red_m++;
 			ps->cost+=rnd;
 		}
