@@ -18,12 +18,15 @@ std::tr1::uniform_real<double> unif(0, 1);
 
 ofstream logtime("logtime");
 ofstream outfixtimes("FixTimes");
+ofstream outfixtimesgreen("FixTimesGreen");
+ofstream outselcoef("SelectionCoefficient");
 ofstream outfixperyear("FixPerYear");
 ofstream outfixdist("FixDist");
 ofstream outmeanfixdist("MeanFixDist");
 ofstream outlifetime("LifeTime");
 ofstream outfractionspropagators("FractionsPropagators");
 ofstream outpropagators("Propagators");
+ofstream outIDsfixed("IDsFixed");
 CTimer timer;
 
 //CConfig config("config");
@@ -422,7 +425,7 @@ void output(ostream &out){
 		(*it)->setFreq((*it)->SubN/totalN,t);
 	}
 
-	out << t << "    " << CStrain::stotal << "    " << strains.size() << "    " << average_red_m() << "    " << average_cost() << "    " << CStrain::max_dist << "    " << Nall() << "    " << endl;
+	out << t << "    " << CStrain::stotal << "    " << strains.size() << "    " << average_red_m() << "    " << average_cost() << "    " << CStrain::max_dist << "    " << Nall() << endl;
 }
 
 
@@ -473,12 +476,14 @@ void FreqDist(){
 
 			if(max_i==(nbins-1)){
 				outfixtimes << (*it)->mut_type << "    " << (*it)->fixtime << "    " << (*it)->fixtime-(*it)->crtime << "    " << (*it)->cost << endl;
-				//cerr << (*it)->ID << endl;
+				
 				timetofix+=(*it)->fixtime-(*it)->crtime;
 				ynum=(*it)->fixtime;
 				fixperyear[ynum]++;
 				if( (*it)->mut_type==0 ){ fixperyearred[ynum]++; }
-				else if ( (*it)->mut_type==1 ){ fixperyeargreen[ynum]++; }
+				else if ( (*it)->mut_type==1 ){ fixperyeargreen[ynum]++;
+					outfixtimesgreen << (*it)->ID << "    " << (*it)->crtime << "    " << (*it)->fixtime << "    " << (*it)->fixtime-(*it)->crtime << "    " << (*it)->cost << endl;
+					outIDsfixed << (*it)->ID << endl;}
 				else if ( (*it)->mut_type==2 ){ fixperyearblue[ynum]++; }
 			}
 
@@ -686,9 +691,9 @@ void Run(){
 
 		PrintSingleInfected();
 		output(out);
-		print_diversity(outdiv);
-		print_fitness(outfit);
-		print_N(outN);
+		//print_diversity(outdiv);
+		//print_fitness(outfit);
+		//print_N(outN);
 
 		//if(iTime%200==0 and t <= 4.) output_graphic_tree();
 	}
