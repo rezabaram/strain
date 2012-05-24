@@ -12,6 +12,13 @@
 #include"io.h"
 #include"signal.h"
 #include"config.h"
+
+#include<fstream>
+bool secondrun=false;
+vector<unsigned int> TrackedIDs;
+ofstream * trackedouts;
+unsigned int NTrackedFiles=0;
+
 int seed=time(0);
 std::tr1::ranlux64_base_01 eng;
 std::tr1::uniform_real<double> unif(0, 1);
@@ -169,6 +176,25 @@ void define_cross_im(){
 
 
 void Initial_Conditions(){
+
+	if(secondrun){
+		ifstream id_file("IDsFixedInput");
+		unsigned int temp_id;
+		while(!id_file.eof()){ //Reading the IDs to be tracked
+			id_file>>temp_id;
+			if(id_file.eof())break;
+			TrackedIDs.push_back(temp_id);
+			}
+		
+		NTrackedFiles=TrackedIDs.size();
+		trackedouts=new ofstream [NTrackedFiles];
+		for(int i=0; i<TrackedIDs.size(); i++){
+		        string name ="tracked"+stringify(i,5,'0');
+                	trackedouts[i].open(name.c_str());
+
+			}
+		}
+
 	//seed=1321702805;
 	t=0.;
 	cerr<< "Seed: "<<seed <<endl;
@@ -583,6 +609,41 @@ void print_recovered(ostream &out){
 	infperyear=0.;
 }
 
+//checkes whether an id is in the tracked vector
+//if so returns the its location in the vector
+//otherwise -1
+int tracked_index(unsigned int id){
+	
+	for(int i=0; i<NTrackedFiles; i++){
+	if(TrackedIDs.at(i)==id) return i;
+	}
+	return -1;
+}
+
+void PrintTracked(){
+
+	list<CStrain*>::iterator it;
+	double Ntot=Nall();
+	double mean_fitness=0.;
+
+	for(it=strains.begin(); it!=strains.end(); it++){
+		mean_fitness+=(*it)->fitness*(*it)->N/Ntot;
+	}
+
+	for(it=strains.begin(); it!=strains.end(); it++){
+		int ind=tracked_index((*it)->ID);
+		if(ind>=0){
+
+			double weighsumf=0., subtrN=0.;
+			(*it)->calSubMeanFitness(weighsumf, subtrN);
+
+			double mean_fitness_subtree=weighsumf/subtrN;
+			double mean_fitness_rest=(mean_fitness-mean_fitness_subtree*subtrN/Ntot)*Ntot/(Ntot-subtrN);
+
+			trackedouts[ind] << t << "    " << strains.size() << "    " << subtrN << "    " << (*it)->N << "    " << (*it)->fitness << "    " << mean_fitness << "    " << mean_fitness_subtree << "    " << mean_fitness_rest << endl;
+		}
+	}
+}
 
 ofstream singleouts[Nfiles];
 
@@ -689,7 +750,8 @@ void Run(){
 		
 		//if(iTime%(inf_period*7)==0 and t >= 20.)
 
-		PrintSingleInfected();
+		//PrintSingleInfected();
+		PrintTracked();
 		output(out);
 		//print_diversity(outdiv);
 		//print_fitness(outfit);
@@ -708,6 +770,7 @@ void finish(){
 int main(int argc, char **argv){
 
 	if(argc>1)seed=atoi(argv[1]);
+	if(argc>2)secondrun=atoi(argv[2]);
 	signal(30,SignalControlReport);
 	signal(31,SignalControlReport);
 	signal(32,SignalControlReport);
