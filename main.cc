@@ -414,7 +414,7 @@ void Update(){
 
 void output(ostream &out){
 	
-	vector<CStrain*>::iterator it; 
+	vector<CStrain*>::iterator it;
 
 	double totalN=top->calSubN();
 
