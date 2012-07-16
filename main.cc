@@ -44,7 +44,8 @@ double chi_at_d(double d){
 	double chi;
 	chi=1./((double)d+1.);
 
-	return chi;
+	return tanh(5./d);
+	//return 1./(d+1);
 }
 
 void define_cross_im(){
@@ -155,7 +156,7 @@ void Initial_Conditions(){
 	cerr<< "Seed: "<<seed <<endl;
 	eng.seed(seed);
 	//eng.seed(10);
-	rmax=config.get_param<size_t>("rmax");
+	//rmax=config.get_param<size_t>("rmax");
 	stotal=0;
 	//creating the root node
 	top=new CStrain(stotal,NULL);
@@ -175,7 +176,7 @@ void Immune_Selection(){
 	//applying to all strains
 	for(it=strains.begin(); it!=strains.end(); it++){
 		CStrain *s=(*it);
-		s->M0+=s->WeightedSumM(chi_at_d)*nu*dt;
+		s->M0=s->M0*exp(-dt/tau0)+s->WeightedSumM(chi_at_d)*nu*dt;
 		s->fitness=f0*(1-beta0*s->M0);
 		s->N=s->N*(1+s->fitness*dt);//make sure about the order of update N and M
 	}
@@ -281,7 +282,7 @@ void Mutations2(){
 void Update_Immunes(){
 	list<CStrain*>::iterator it;
 	for(it=strains.begin(); it!=strains.end(); it++){
-		(*it)->accN+=nu*dt*(*it)->N;
+		(*it)->accN=(*it)->accN*exp(-dt/tau0)+nu*dt*(*it)->N;
 	}
 }
 

@@ -9,7 +9,7 @@ class CConfig : public CBaseConfig{
 		parse(filename);
 		}
 	void define_parameters(){
-		add_param<size_t>("rmax",100);
+		add_param<size_t>("rmax",10);
 		}
 	};
 
